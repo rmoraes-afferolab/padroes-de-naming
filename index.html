@@ -51,9 +51,9 @@ details.ctl summary::after{content:'';width:.4rem;height:.4rem;border-right:2px 
 .plmenu .sub{margin-bottom:.5rem}
 .menu .all{font:inherit;font-size:.8125rem;background:none;border:0;color:var(--muted);text-decoration:underline;cursor:pointer;text-align:left;padding:.2rem .35rem}
 .controls input[type=search]{margin-left:auto;height:2.25rem;font:inherit;font-size:.875rem;background:var(--raised);color:var(--fg);border:1px solid var(--line);border-radius:0;padding:0 .7rem;min-width:8rem;flex:1 1 8rem;max-width:16rem}
-.stage{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr);gap:2rem;align-items:start}
+.stage{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,1fr);gap:2rem;align-items:start}
 .chartbox{min-width:0}
-svg#sun{width:100%;height:auto;display:block;max-width:760px;margin:0 auto}
+svg#sun{width:100%;height:auto;display:block}
 svg#sun text{font-family:var(--font);pointer-events:none}
 .back{font:inherit;font-size:.8125rem;background:none;border:1px solid var(--line);color:var(--fg);padding:.25rem .6rem;margin-bottom:.5rem;cursor:pointer}
 .back:hover{border-color:var(--muted)}
@@ -65,7 +65,7 @@ svg#sun text{font-family:var(--font);pointer-events:none}
 .crumbs{font-size:.8125rem;color:var(--muted)}
 .crumbs button{font:inherit;background:none;border:0;color:var(--fg);text-decoration:underline;cursor:pointer;padding:0}
 .bars{display:grid;gap:.4rem}
-.bar{display:grid;grid-template-columns:minmax(0,12rem) minmax(3rem,1fr) 2.2rem;gap:.6rem;align-items:center;font-size:.875rem;background:none;border:0;color:var(--fg);text-align:left;padding:.15rem 0;cursor:pointer;font-family:inherit}
+.bar{display:grid;grid-template-columns:minmax(0,1fr) minmax(2rem,.5fr) 2rem;gap:.6rem;align-items:center;font-size:.875rem;background:none;border:0;color:var(--fg);text-align:left;padding:.15rem 0;cursor:pointer;font-family:inherit}
 .bar:hover .nm{text-decoration:underline}
 .bar .nm{overflow-wrap:anywhere;line-height:1.25}
 .bar .tr{height:.6rem;background:var(--line);border-radius:0;overflow:hidden}
@@ -179,7 +179,7 @@ blockquote cite{font-style:normal;font-size:.8125rem;color:var(--muted);display:
   <div class="stage">
     <div class="chartbox">
       <button type="button" class="back" id="back" hidden>← Voltar um nível</button>
-      <svg id="sun" viewBox="0 0 760 600" role="img" aria-label="Treemap consolidado dos players por recorte, subcategoria e player"></svg>
+      <svg id="sun" viewBox="0 0 960 640" role="img" aria-label="Treemap consolidado dos players por recorte, subcategoria e player"></svg>
       <div class="legend" id="legend"></div>
     </div>
     <div class="side"><div id="pcard" class="pcard" aria-live="polite"></div><aside class="panel" id="panel" aria-live="polite"></aside></div>
@@ -440,15 +440,14 @@ function buildTree(ps){
 const lum=c=>d3.lab(c).l;
 
 /* ---------- gráfico (treemap) ---------- */
-const W=760,H=600;
-function trunc(s,n){return s.length<=n?s:(n<2?'':s.slice(0,n-1).trimEnd()+'…')}
-function wrapLeaf(s,cpl,maxL){
+const W=960,H=640;
+function wrapFull(s,cpl){
   const out=[];let cur='';
-  s.split(' ').forEach(w=>{const t=cur?cur+' '+w:w;if(t.length<=cpl)cur=t;else{if(cur)out.push(cur);cur=w}});
-  if(cur)out.push(cur);
-  let r=out.slice(0,maxL);
-  if(out.length>maxL)r[maxL-1]=trunc(r[maxL-1]+'…',cpl);
-  return r.map(l=>trunc(l,cpl));
+  s.split(' ').forEach(w=>{
+    while(w.length>cpl){if(cur){out.push(cur);cur=''}out.push(w.slice(0,cpl));w=w.slice(cpl)}
+    const t=cur?cur+' '+w:w;if(t.length<=cpl)cur=t;else{out.push(cur);cur=w}
+  });
+  if(cur)out.push(cur);return out;
 }
 function redraw(){
   const svg=d3.select('#sun');svg.selectAll('*').remove();
@@ -489,12 +488,21 @@ function redraw(){
       let lines=[],fs=10.5,x=r.x0+5,y=r.y0+13;
       if(shown.has(d)){
         if(d.children){
-          const hd=d.height===2?20:16;fs=d.height===2?12:10.5;
-          if(w>34&&h>hd)lines=[trunc(d.data.name+' ('+d.leaves().length+')',Math.floor((w-10)/(fs*.56)))];
-          y=r.y0+hd-5-(d.height===2?0:0);
+          const hd=d.height===2?20:16,top=d.height===2?12:10.5;
+          y=r.y0+hd-5;fs=top;
+          const opts=[d.data.name+' ('+d.leaves().length+')',d.data.name];
+          outer:for(const txt of opts){for(let f=top;f>=7;f-=.5){if(txt.length*f*.56<=w-10&&f*1.2<=hd){lines=[txt];fs=f;break outer}}}
         }else{
-          const cpl=Math.floor((w-8)/(fs*.56)),ml=Math.floor((h-4)/(fs*1.15));
-          if(cpl>=3&&ml>=1)lines=wrapLeaf(d.data.name,cpl,ml);
+          const lw=Math.max(...d.data.name.split(' ').map(x=>x.length));
+          for(const brk of [false,true]){
+            for(let f=11;f>=6.5&&!lines.length;f-=.5){
+              const cpl=Math.floor((w-8)/(f*.56));if(cpl<1)break;
+              if(!brk&&lw>cpl)continue;
+              const L=wrapFull(d.data.name,cpl);
+              if(L.length*f*1.15<=h-3){lines=L;fs=f}
+            }
+            if(lines.length)break;
+          }
         }
       }
       t.attr('font-size',fs).attr('font-weight',d.children?600:400).attr('x',x).attr('y',y);

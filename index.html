@@ -396,7 +396,7 @@ const DEF={
     0:'A IA é tratada como ferramenta ou plataforma, sem identidade de pessoa. Exemplos: Yoodli, Hyperbound.'}
 };
 const DIMDESC={g:'Grupo competitivo',o:'Origem',t:'Tipologia do nome',s:'Território de significado',ai:'Relação com IA',p:'Personificação'};
-const PAL=['--c1','--c2','--c3','--c4','--c5','--c6','--c7','--c8'];
+const PAL=['--c1','--c5','--c2','--c6','--c7','--c3','--c4','--c8']; /* ordem análoga: roxo, índigo, verde-azulado, menta, depois quentes */
 const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const st={lens:'gt',reps:new Set([1,2,3,4,5]),grps:new Set(['A','B','C','D']),wt:'one',q:'',sel:null};
@@ -464,7 +464,8 @@ function redraw(){
   palMap=new Map();
   root.children.forEach((c,i)=>palMap.set(c.data.name,css(PAL[i%PAL.length])));
   const base=d=>palMap.get(d.ancestors().find(a=>a.depth===1).data.name);
-  const fillOf=d=>{const b=d3.color(base(d));return d.depth===1?b:d.depth===2?b.darker(.45):b.brighter(.35)};
+  const fillOf=d=>base(d);
+  const op=d=>d.depth===1?.3:d.depth===2?.4:.5; /* transparência 30–50%, acumula por nível */
   const layout=p=>{ /* d3.treemap assume raiz com depth 0; zera temporariamente */
     const k=p.depth;p.each(d=>d.depth-=k);
     d3.treemap().size([W,H]).round(true).paddingInner(2)
@@ -477,7 +478,7 @@ function redraw(){
   let shown=new Set(nodes);
   const g=svg.append('g');
   const rect=g.append('g').selectAll('rect').data(nodes).join('rect')
-    .attr('fill',fillOf).attr('fill-opacity',d=>d.children?.9:.85)
+    .attr('fill',fillOf).attr('fill-opacity',d=>op(d))
     .attr('x',d=>d.cur.x0).attr('y',d=>d.cur.y0).attr('width',d=>Math.max(0,d.cur.x1-d.cur.x0)).attr('height',d=>Math.max(0,d.cur.y1-d.cur.y0))
     .attr('stroke',d=>d.data.player&&st.sel===d.data.player.id?css('--fg'):'none').attr('stroke-width',2);
   rect.style('cursor','pointer').attr('tabindex',0)
@@ -485,7 +486,7 @@ function redraw(){
     .on('click',(e,d)=>clicked(d)).on('keydown',(e,d)=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();clicked(d)}});
   rect.append('title').text(d=>d.data.player?d.data.name+' · '+d.data.player.r.map(r=>'R'+r).join(' '):d.ancestors().reverse().slice(1).map(a=>a.data.name).join(' › ')+' · '+d.leaves().length+' players');
   const label=g.append('g').attr('pointer-events','none').selectAll('text').data(nodes).join('text')
-    .attr('fill',d=>lum(fillOf(d))>55?'#170D17':'#F7F7F7');
+    .attr('fill',css('--fg'));
   function drawLabels(){
     label.each(function(d){
       const t=d3.select(this),r=d.cur,w=r.x1-r.x0,h=r.y1-r.y0;
@@ -524,7 +525,7 @@ function redraw(){
     label.attr('fill-opacity',0);
     const t=g.transition().duration(reduce?0:600);
     rect.transition(t).tween('geo',function(d){const i=d3.interpolate(d.cur,d.target),el=d3.select(this);return u=>{const c=d.cur=i(u);el.attr('x',c.x0).attr('y',c.y0).attr('width',Math.max(0,c.x1-c.x0)).attr('height',Math.max(0,c.y1-c.y0))}})
-      .attr('fill-opacity',d=>shown.has(d)?(d.children?.9:.85):0).attr('pointer-events',d=>shown.has(d)?'auto':'none')
+      .attr('fill-opacity',d=>shown.has(d)?op(d):0).attr('pointer-events',d=>shown.has(d)?'auto':'none')
       .attr('tabindex',d=>shown.has(d)?0:-1);
     t.on('end',()=>{drawLabels();label.attr('fill-opacity',1)});
     if(reduce){drawLabels();label.attr('fill-opacity',1)}
@@ -534,7 +535,7 @@ function redraw(){
   back.onclick=()=>{if(focus&&focus.parent)clicked(focus.parent)};
   panel(root);
   const lg=document.getElementById('legend');lg.innerHTML='';
-  root.children.forEach(c=>{const s=document.createElement('span');s.innerHTML='<i style="background:'+palMap.get(c.data.name)+'"></i>'+c.data.name+' ('+c.leaves().length+')';lg.appendChild(s)});
+  root.children.forEach(c=>{const s=document.createElement('span');s.innerHTML='<i style="background:'+palMap.get(c.data.name)+';opacity:.5"></i>'+c.data.name+' ('+c.leaves().length+')';lg.appendChild(s)});
 }
 
 /* ---------- painel ---------- */
@@ -551,7 +552,7 @@ function panel(p){
    +'<p class="note">'+Math.round(leaves.length/total*100)+'% da base filtrada ('+total+' players). Recorte: '+esc(lensName)+'.</p>'+defHtml(p)+'</div>';
   if(p.children&&!p.children[0].data.player){
     const kk=p.children;
-    h+='<div><p class="sub">'+(p===root?KEYNAME[LENSES.find(l=>l.id===st.lens).k[0]]:KEYNAME[kk[0].data.key])+'</p><div class="bars">'+kk.map((c,i)=>{const n=c.leaves().length;return '<button class="bar" data-k="'+i+'"><span class="nm">'+esc(c.data.name)+'</span><span class="tr"><span class="fl" style="width:'+Math.round(n/leaves.length*100)+'%;background:'+palMap.get(c.ancestors().find(a=>a.depth===1).data.name)+'"></span></span><span class="pc">'+n+'</span></button>'}).join('')+'</div></div>';
+    h+='<div><p class="sub">'+(p===root?KEYNAME[LENSES.find(l=>l.id===st.lens).k[0]]:KEYNAME[kk[0].data.key])+'</p><div class="bars">'+kk.map((c,i)=>{const n=c.leaves().length;return '<button class="bar" data-k="'+i+'"><span class="nm">'+esc(c.data.name)+'</span><span class="tr"><span class="fl" style="width:'+Math.round(n/leaves.length*100)+'%;opacity:.5;background:'+palMap.get(c.ancestors().find(a=>a.depth===1).data.name)+'"></span></span><span class="pc">'+n+'</span></button>'}).join('')+'</div></div>';
   }
   const initial=n=>{const c=n.normalize('NFD').replace(/[\u0300-\u036f]/g,'')[0].toUpperCase();return /[A-Z]/.test(c)?c:'#'};
   const grp=new Map();leaves.sort((x,y)=>x.name.localeCompare(y.name)).forEach(x=>{const k=initial(x.name);if(!grp.has(k))grp.set(k,[]);grp.get(k).push(x)});

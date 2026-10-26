@@ -1,8 +1,9 @@
+<meta charset="utf-8">
 <title>Padrões de naming</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@200;300;400;600;700;900&display=swap">
 <style>
-/* Layout: cabeçalho assimétrico em gradiente; palco com sunburst à esquerda e painel de leitura à direita; segunda página em coluna única com evidências citadas. */
+/* Layout: cabeçalho assimétrico em gradiente; palco com treemap à esquerda e painel de leitura à direita; segunda página em coluna única com evidências citadas. */
 :root{
   --bg:#170D17; --raised:#211326; --fg:#F7F7F7; --muted:#BFC3C6; --line:rgba(247,247,247,.16);
   --accent:#E51C47; --accent-fg:#F7F7F7; --grad:radial-gradient(120% 120% at 80% 0%, #380833 0%, #170D17 55%);
@@ -54,6 +55,8 @@ details.ctl summary::after{content:'';width:.4rem;height:.4rem;border-right:2px 
 .chartbox{min-width:0}
 svg#sun{width:100%;height:auto;display:block;max-width:760px;margin:0 auto}
 svg#sun text{font-family:var(--font);pointer-events:none}
+.back{font:inherit;font-size:.8125rem;background:none;border:1px solid var(--line);color:var(--fg);padding:.25rem .6rem;margin-bottom:.5rem;cursor:pointer}
+.back:hover{border-color:var(--muted)}
 .legend{display:flex;flex-wrap:wrap;gap:.35rem 1rem;font-size:.8125rem;color:var(--muted);margin-top:.5rem}
 .legend i{display:inline-block;width:.7rem;height:.7rem;border-radius:0;margin-right:.35rem;vertical-align:-1px}
 .panel{min-width:0;background:var(--raised);border:1px solid var(--line);border-radius:0;padding:1.25rem;display:grid;gap:1.1rem;}
@@ -175,7 +178,8 @@ blockquote cite{font-style:normal;font-size:.8125rem;color:var(--muted);display:
   </div>
   <div class="stage">
     <div class="chartbox">
-      <svg id="sun" viewBox="0 0 760 760" role="img" aria-label="Gráfico radial consolidado dos players por recorte, subcategoria e player"></svg>
+      <button type="button" class="back" id="back" hidden>← Voltar um nível</button>
+      <svg id="sun" viewBox="0 0 760 600" role="img" aria-label="Treemap consolidado dos players por recorte, subcategoria e player"></svg>
       <div class="legend" id="legend"></div>
     </div>
     <div class="side"><div id="pcard" class="pcard" aria-live="polite"></div><aside class="panel" id="panel" aria-live="polite"></aside></div>
@@ -194,7 +198,7 @@ blockquote cite{font-style:normal;font-size:.8125rem;color:var(--muted);display:
   <section class="sec" id="glossario">
     <div class="overline">Glossário</div>
     <h2>O que são os <b>recortes</b> e as categorias</h2>
-    <p class="note" style="max-width:70ch">Cada recorte combina duas dimensões. A primeira forma o anel interno do gráfico, a segunda forma o anel seguinte e os players ficam no anel externo. Clique em uma categoria para aprofundar; o painel à direita explica o que ela significa.</p>
+    <p class="note" style="max-width:70ch">Cada recorte combina duas dimensões. A primeira forma os blocos maiores do gráfico, a segunda divide cada bloco em sub-blocos e os players ficam nos retângulos internos, com área proporcional à contagem. Clique em um bloco para aprofundar; o painel à direita explica o que ela significa.</p>
     <h3 class="gh">Recortes</h3>
     <div class="grows" id="gl-l"></div>
     <h3 class="gh">Categorias</h3>
@@ -435,67 +439,88 @@ function buildTree(ps){
 }
 const lum=c=>d3.lab(c).l;
 
-/* ---------- gráfico ---------- */
-const W=760;
-function wrapName(s,max){if(s.length<=max)return [s];const w=s.split(' ');let best=null;for(let i=1;i<w.length;i++){const a=w.slice(0,i).join(' '),b=w.slice(i).join(' ');const m=Math.max(a.length,b.length);if(!best||m<best.m)best={l:[a,b],m};}return best?best.l:[s];}
-function fitLabel(d){const L=wrapName(d.data.name,16);const mx=Math.max(...L.map(x=>x.length));d.lines=L;d.fs=Math.max(6,Math.min(11,100/(mx*.56)));}
+/* ---------- gráfico (treemap) ---------- */
+const W=760,H=600;
+function trunc(s,n){return s.length<=n?s:(n<2?'':s.slice(0,n-1).trimEnd()+'…')}
+function wrapLeaf(s,cpl,maxL){
+  const out=[];let cur='';
+  s.split(' ').forEach(w=>{const t=cur?cur+' '+w:w;if(t.length<=cpl)cur=t;else{if(cur)out.push(cur);cur=w}});
+  if(cur)out.push(cur);
+  let r=out.slice(0,maxL);
+  if(out.length>maxL)r[maxL-1]=trunc(r[maxL-1]+'…',cpl);
+  return r.map(l=>trunc(l,cpl));
+}
 function redraw(){
   const svg=d3.select('#sun');svg.selectAll('*').remove();
+  const back=document.getElementById('back');back.hidden=true;
   const ps=filtered();
-  if(!ps.length){svg.append('text').attr('x',W/2).attr('y',W/2).attr('text-anchor','middle').attr('fill',css('--muted')).text('Nenhum player neste recorte');
+  if(!ps.length){svg.append('text').attr('x',W/2).attr('y',H/2).attr('text-anchor','middle').attr('fill',css('--muted')).text('Nenhum player neste recorte');
     document.getElementById('panel').innerHTML='<div class="empty">Ajuste os filtros de relatório, grupo ou busca.</div>';document.getElementById('legend').innerHTML='';document.getElementById('pcard').innerHTML='';document.getElementById('plMenu').innerHTML='';return;}
   const data=buildTree(ps);
-  root=d3.partition().size([2*Math.PI,4])(d3.hierarchy(data).sum(d=>d.value||0).sort((a,b)=>b.value-a.value||a.data.name.localeCompare(b.data.name)));
-  const radius=W/6;
+  root=d3.hierarchy(data).sum(d=>d.value||0).sort((a,b)=>b.value-a.value||a.data.name.localeCompare(b.data.name));
   palMap=new Map();
   root.children.forEach((c,i)=>palMap.set(c.data.name,css(PAL[i%PAL.length])));
   const base=d=>palMap.get(d.ancestors().find(a=>a.depth===1).data.name);
   const fillOf=d=>{const b=d3.color(base(d));return d.depth===1?b:d.depth===2?b.darker(.45):b.brighter(.35)};
-  root.each(d=>{d.current=d;fitLabel(d)});
-  const arc=d3.arc().startAngle(d=>d.x0).endAngle(d=>d.x1).padAngle(d=>Math.min((d.x1-d.x0)/2,.005)).padRadius(radius*1.5).innerRadius(d=>d.y0*radius).outerRadius(d=>Math.max(d.y0*radius,d.y1*radius-2));
-  const vis=d=>d.y1<=3&&d.y0>=1&&d.x1>d.x0;
-  const labVis=d=>d.y1<=3&&d.y0>=1&&(d.x1-d.x0)*((d.y0+d.y1)/2*radius)>d.lines.length*d.fs*1.1;
-  const lt=d=>{const x=(d.x0+d.x1)/2*180/Math.PI,y=(d.y0+d.y1)/2*radius;return `rotate(${x-90}) translate(${y},0) rotate(${x<180?0:180})`};
-  const g=svg.append('g').attr('transform',`translate(${W/2},${W/2})`);
-  const path=g.append('g').selectAll('path').data(root.descendants().slice(1)).join('path')
-    .attr('fill',fillOf).attr('fill-opacity',d=>vis(d.current)?(d.children?.9:.85):0)
-    .attr('pointer-events',d=>vis(d.current)?'auto':'none').attr('d',d=>arc(d.current))
+  const layout=p=>{ /* d3.treemap assume raiz com depth 0; zera temporariamente */
+    const k=p.depth;p.each(d=>d.depth-=k);
+    d3.treemap().size([W,H]).round(true).paddingInner(2)
+      .paddingOuter(d=>d===p?0:3).paddingTop(d=>d===p?0:d.height===2?20:d.height===1?16:3)(p);
+    p.each(d=>d.depth+=k);return p};
+  const geo=d=>({x0:d.x0,y0:d.y0,x1:d.x1,y1:d.y1});
+  const nodes=root.descendants().slice(1);
+  layout(root);nodes.forEach(d=>d.cur=geo(d));
+  focus=root;
+  let shown=new Set(nodes);
+  const g=svg.append('g');
+  const rect=g.append('g').selectAll('rect').data(nodes).join('rect')
+    .attr('fill',fillOf).attr('fill-opacity',d=>d.children?.9:.85)
+    .attr('x',d=>d.cur.x0).attr('y',d=>d.cur.y0).attr('width',d=>Math.max(0,d.cur.x1-d.cur.x0)).attr('height',d=>Math.max(0,d.cur.y1-d.cur.y0))
     .attr('stroke',d=>d.data.player&&st.sel===d.data.player.id?css('--fg'):'none').attr('stroke-width',2);
-  path.style('cursor','pointer').attr('tabindex',d=>vis(d.current)?0:-1)
+  rect.style('cursor','pointer').attr('tabindex',0)
     .attr('role','button').attr('aria-label',d=>d.data.name+', '+d.value+(d.data.player?' citações':' players'))
     .on('click',(e,d)=>clicked(d)).on('keydown',(e,d)=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();clicked(d)}});
-  path.append('title').text(d=>d.data.player?d.data.name+' · '+d.data.player.r.map(r=>'R'+r).join(' '):d.ancestors().reverse().slice(1).map(a=>a.data.name).join(' › ')+' · '+d.leaves().length+' players');
-  const label=g.append('g').attr('pointer-events','none').attr('text-anchor','middle').selectAll('text').data(root.descendants().slice(1)).join('text')
-    .attr('font-size',d=>d.fs).attr('font-weight',d=>d.children?600:400)
-    .attr('fill',d=>lum(fillOf(d))>55?'#170D17':'#F7F7F7')
-    .attr('fill-opacity',d=>+labVis(d.current)).attr('transform',d=>lt(d.current))
-    .each(function(d){const n=d.lines.length;d3.select(this).selectAll('tspan').data(d.lines).join('tspan').attr('x',0).attr('dy',(l,i)=>i===0?((.35-(n-1)*.55)+'em'):'1.1em').text(l=>l);});
-  const cg=g.append('g').style('cursor','pointer').on('click',()=>{if(focus&&focus.parent)clicked(focus.parent)});
-  cg.append('circle').attr('r',radius-2).attr('fill',css('--bg')).attr('stroke',css('--line'));
-  const c1=cg.append('text').attr('text-anchor','middle').attr('y',-8).attr('font-size',15).attr('font-weight',700).attr('fill',css('--fg'));
-  const c2=cg.append('text').attr('text-anchor','middle').attr('y',14).attr('font-size',12).attr('fill',css('--muted'));
-  const c3=cg.append('text').attr('text-anchor','middle').attr('y',32).attr('font-size',11).attr('fill',css('--muted'));
-  function center(p){
-    const nm=p===root?'Todos':p.data.name;
-    const L=wrapName(nm,15),mx=Math.max(...L.map(x=>x.length)),fs=Math.max(10,Math.min(16,170/(mx*.6))),n=L.length;
-    c1.attr('font-size',fs).attr('y',-14-(n-1)*fs*.575);
-    c1.selectAll('tspan').data(L).join('tspan').attr('x',0).attr('dy',(l,i)=>i===0?'0':'1.15em').text(l=>l);
-    const y2=10+(n-1)*fs*.575+fs*.5;
-    c2.attr('y',y2).text(p.leaves().length+' players');
-    c3.attr('y',y2+17).text(p===root?'clique para aprofundar':(p.parent?'clique para voltar':''));
+  rect.append('title').text(d=>d.data.player?d.data.name+' · '+d.data.player.r.map(r=>'R'+r).join(' '):d.ancestors().reverse().slice(1).map(a=>a.data.name).join(' › ')+' · '+d.leaves().length+' players');
+  const label=g.append('g').attr('pointer-events','none').selectAll('text').data(nodes).join('text')
+    .attr('fill',d=>lum(fillOf(d))>55?'#170D17':'#F7F7F7');
+  function drawLabels(){
+    label.each(function(d){
+      const t=d3.select(this),r=d.cur,w=r.x1-r.x0,h=r.y1-r.y0;
+      let lines=[],fs=10.5,x=r.x0+5,y=r.y0+13;
+      if(shown.has(d)){
+        if(d.children){
+          const hd=d.height===2?20:16;fs=d.height===2?12:10.5;
+          if(w>34&&h>hd)lines=[trunc(d.data.name+' ('+d.leaves().length+')',Math.floor((w-10)/(fs*.56)))];
+          y=r.y0+hd-5-(d.height===2?0:0);
+        }else{
+          const cpl=Math.floor((w-8)/(fs*.56)),ml=Math.floor((h-4)/(fs*1.15));
+          if(cpl>=3&&ml>=1)lines=wrapLeaf(d.data.name,cpl,ml);
+        }
+      }
+      t.attr('font-size',fs).attr('font-weight',d.children?600:400).attr('x',x).attr('y',y);
+      t.selectAll('tspan').data(lines).join('tspan').attr('x',x).attr('dy',(l,i)=>i===0?0:fs*1.15).text(l=>l);
+    });
   }
+  drawLabels();
   function clicked(p){
-    if(!p.children){st.sel=p.data.player.id;path.attr('stroke',d=>d.data.player&&d.data.player.id===st.sel?css('--fg'):'none');panel(focus||root);return;}
+    if(!p.children){st.sel=p.data.player.id;rect.attr('stroke',d=>d.data.player&&d.data.player.id===st.sel?css('--fg'):'none');panel(focus||root);return;}
     focus=p;
-    root.each(d=>d.target={x0:Math.max(0,Math.min(1,(d.x0-p.x0)/(p.x1-p.x0)))*2*Math.PI,x1:Math.max(0,Math.min(1,(d.x1-p.x0)/(p.x1-p.x0)))*2*Math.PI,y0:Math.max(0,d.y0-p.depth),y1:Math.max(0,d.y1-p.depth),lines:d.lines,fs:d.fs});
-    const t=g.transition().duration(reduce?0:700);
-    path.transition(t).tween('data',d=>{const i=d3.interpolate(d.current,d.target);return u=>d.current=i(u)})
-      .attr('fill-opacity',d=>vis(d.target)?(d.children?.9:.85):0).attr('pointer-events',d=>vis(d.target)?'auto':'none')
-      .attr('tabindex',d=>vis(d.target)?0:-1).attrTween('d',d=>()=>arc(d.current));
-    label.transition(t).attr('fill-opacity',d=>+labVis(d.target)).attrTween('transform',d=>()=>lt(d.current));
-    center(p);panel(p);
+    const was=shown;
+    shown=new Set(p.descendants().slice(1));
+    layout(p);
+    nodes.forEach(d=>{if(shown.has(d)){d.target=geo(d);if(!was.has(d))d.cur=geo(d)}else d.target=d.cur});
+    label.attr('fill-opacity',0);
+    const t=g.transition().duration(reduce?0:600);
+    rect.transition(t).tween('geo',function(d){const i=d3.interpolate(d.cur,d.target),el=d3.select(this);return u=>{const c=d.cur=i(u);el.attr('x',c.x0).attr('y',c.y0).attr('width',Math.max(0,c.x1-c.x0)).attr('height',Math.max(0,c.y1-c.y0))}})
+      .attr('fill-opacity',d=>shown.has(d)?(d.children?.9:.85):0).attr('pointer-events',d=>shown.has(d)?'auto':'none')
+      .attr('tabindex',d=>shown.has(d)?0:-1);
+    t.on('end',()=>{drawLabels();label.attr('fill-opacity',1)});
+    if(reduce){drawLabels();label.attr('fill-opacity',1)}
+    back.hidden=!p.parent;
+    panel(p);
   }
-  focus=root;center(root);panel(root);
+  back.onclick=()=>{if(focus&&focus.parent)clicked(focus.parent)};
+  panel(root);
   const lg=document.getElementById('legend');lg.innerHTML='';
   root.children.forEach(c=>{const s=document.createElement('span');s.innerHTML='<i style="background:'+palMap.get(c.data.name)+'"></i>'+c.data.name+' ('+c.leaves().length+')';lg.appendChild(s)});
 }
@@ -522,15 +547,15 @@ function panel(p){
   if(!st.letter||!grp.has(st.letter))st.letter=(st.sel!=null&&grp.has(initial(PLAYERS[st.sel].name)))?initial(PLAYERS[st.sel].name):keys[0];
   buildPlayerMenu(grp,keys,leaves,p);
   el.innerHTML=h;renderCard();
-  el.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{const c=p.children[+b.dataset.k];d3.selectAll('#sun path').filter(d=>d===c).dispatch('click')});
-  el.querySelectorAll('.crumbs button').forEach(b=>b.onclick=()=>{const a=path[+b.dataset.i];d3.selectAll('#sun path').filter(d=>d===a).dispatch('click');if(a===root){focusRoot()}});
+  el.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{const c=p.children[+b.dataset.k];d3.selectAll('#sun rect').filter(d=>d===c).dispatch('click')});
+  el.querySelectorAll('.crumbs button').forEach(b=>b.onclick=()=>{const a=path[+b.dataset.i];d3.selectAll('#sun rect').filter(d=>d===a).dispatch('click');if(a===root){focusRoot()}});
 }
 function buildPlayerMenu(grp,keys,leaves,p){
   const m=document.getElementById('plMenu');
   const alpha='ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').concat(grp.has('#')?['#']:[]);
   m.innerHTML='<p class="sub">Players neste recorte · '+leaves.length+'</p><div class="letters" role="group" aria-label="Filtrar por letra inicial">'+alpha.map(k=>'<button type="button" data-l="'+k+'" aria-pressed="'+(k===st.letter)+'"'+(grp.has(k)?' title="'+grp.get(k).length+' players"':' disabled')+'>'+k+'</button>').join('')+'</div><div class="plist">'+grp.get(st.letter).map(x=>'<button type="button" data-p="'+x.id+'"'+(st.sel===x.id?' aria-current="true"':'')+'>'+esc(x.name)+'</button>').join('')+'</div>';
   m.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>{st.letter=b.dataset.l;buildPlayerMenu(grp,keys,leaves,p)});
-  m.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{st.sel=+b.dataset.p;d3.selectAll('#sun path').attr('stroke',d=>d.data.player&&d.data.player.id===st.sel?css('--fg'):'none');document.getElementById('plDd').open=false;panel(p)});
+  m.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{st.sel=+b.dataset.p;d3.selectAll('#sun rect').attr('stroke',d=>d.data.player&&d.data.player.id===st.sel?css('--fg'):'none');document.getElementById('plDd').open=false;panel(p)});
   document.getElementById('plTxt').textContent=st.sel!=null?PLAYERS[st.sel].name:'Selecionar';
 }
 function defHtml(p){

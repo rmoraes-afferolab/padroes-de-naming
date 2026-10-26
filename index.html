@@ -61,14 +61,6 @@ svg#sun text{font-family:var(--font);pointer-events:none}
 .reopen:hover{text-decoration:underline}
 .site{color:var(--fg);text-decoration:underline;text-underline-offset:2px;word-break:break-all}
 .site:hover{color:var(--accent)}
-.glist{display:grid;gap:0;border-top:1px solid var(--line);max-width:60rem}
-.glist .gi{display:grid;grid-template-columns:2.25rem minmax(0,1fr) auto;gap:.25rem 1rem;align-items:baseline;padding:.8rem 0;border-bottom:1px solid var(--line)}
-.glist .gl{display:inline-block;width:1.6rem;height:1.6rem;line-height:1.6rem;text-align:center;font-weight:700;font-size:.875rem;color:var(--fg);position:relative}
-.glist .gl::before{content:'';position:absolute;inset:0;background:var(--sw);opacity:.5}
-.glist .gl b{position:relative;font-weight:700}
-.glist .gt{font-weight:700}
-.glist .gd{grid-column:2;color:var(--fg)}
-.glist .gn{color:var(--muted);font-variant-numeric:tabular-nums;font-size:.875rem;white-space:nowrap}
 .charttools{display:none;justify-content:space-between;align-items:center;gap:.5rem;margin-bottom:.5rem;min-height:1.9rem}
 .charttools .back{margin-bottom:0}
 #fsBtn{margin:0 0 0 auto}
@@ -246,11 +238,6 @@ blockquote cite{font-style:normal;font-size:.8125rem;color:var(--muted);display:
   <div class="rleg" id="rleg"></div>
   <div class="ilist" id="ilist"></div>
 </div>
-<section class="sec" id="grupos" aria-labelledby="grupos-h">
-  <div class="overline">Grupos competitivos</div>
-  <h2 id="grupos-h">Como os players estão <b>classificados</b></h2>
-  <div class="glist" id="gl-g"></div>
-</section>
 </main>
 </div>
 
@@ -459,7 +446,7 @@ const LENSDEF={
 };
 const DEF={
  g:{A:'A oferta central é praticar conversas com IA (roleplay, simulação). São os concorrentes mais próximos. Exemplos: Yoodli, Second Nature, Hyperbound, Pratique IA.',
-    B:'Coaching com IA e acompanhamento contínuo, que hoje também incorpora roleplay. Exemplos: Valence (Nadia), CoachHub (AIMY), BetterUp (Grow).',
+    B:'Coaching com IA e acompanhamento contínuo, que hoje também incorpora roleplay. Exemplos: Nadia, AIMY, Grow.',
     C:'Plataformas amplas de aprendizagem corporativa (LMS/LXP) que acrescentaram IA ou roleplay como módulo. Exemplos: Docebo, Udemy Business, Degreed, Cornerstone.',
     D:'Produtos de fora da categoria, usados só como referência de naming, não como concorrentes. Exemplos: Duolingo Max, Notion, Replika.'},
  o:{BR:'Marcas com origem ou atuação principal no Brasil.',
@@ -700,7 +687,7 @@ function focusRoot(){ /* volta ao centro por redesenho simples */ redraw(); }
 /* ---------- tabela e insights ---------- */
 document.getElementById('rleg').innerHTML=[1,2,3,4,5].map(n=>'<span><b>R'+n+'</b> '+esc(REPORTS[n].arq.replace(/\.md$/,''))+'</span>').join('');
 document.getElementById('ilist').innerHTML=INSIGHTS.map((x,i)=>'<article class="ins"><div><div class="overline">'+esc(x.tema)+' · '+(i+1)+' de '+INSIGHTS.length+'</div><h3>'+esc(x.t)+'</h3><p class="dir"><b>Diretriz.</b> '+esc(x.d)+'</p>'+(x.ex?'<p class="dir sm"><b>Exemplo.</b> '+esc(x.ex)+'</p>':'')+(x.nb?'<p class="dir sm"><b>Ressalva.</b> '+esc(x.nb)+'</p>':'')+'<div class="conv">Convergência: <span class="rtags">'+x.conv.map(r=>'<span class="rt">R'+r+'</span>').join('')+'</span></div></div><div class="ev">'+x.ev.map(e=>'<blockquote><p class="ctx">'+esc(e[3])+'</p><p>“'+esc(e[2])+'”</p><cite><span class="rt">R'+e[0]+'</span>'+esc(e[1])+'</cite></blockquote>').join('')+'</div></article>').join('');
-let glDim='t';
+let glDim='g';
 function renderGl(){
   document.getElementById('gl-l').innerHTML=LENSES.map(l=>'<div class="grow l"><b>'+esc(l.label)+'</b><span>'+esc(LENSDEF[l.id])+'</span><button type="button" data-lens="'+l.id+'">Ver no gráfico</button></div>').join('');
   document.querySelectorAll('#gl-l [data-lens]').forEach(b=>b.onclick=()=>{st.lens=b.dataset.lens;st.sel=null;document.getElementById('lensSel').value=st.lens;redraw();window.scrollTo({top:0,behavior:reduce?'auto':'smooth'})});
@@ -710,15 +697,6 @@ function renderGl(){
   document.getElementById('gl-c').innerHTML='<div class="grow h"><span>Categoria</span><span>O que é</span><span>Exemplos</span><span class="n">Players</span></div>'+Object.keys(LAB[glDim]).map(c=>{const parts=String(DEF[glDim][c]).split(' Exemplos: ');const n=PLAYERS.filter(x=>String(x[glDim])===String(c)).length;return '<div class="grow"><b>'+esc(LAB[glDim][c])+'</b><span>'+esc(parts[0])+'</span><span class="ex">'+esc(parts[1]||'').replace(/\.$/,'')+'</span><span class="n">'+n+' players</span></div>'}).join('');
 }
 renderGl();
-function renderGroups(){
-  const t={A:['Direto','a oferta central é praticar conversas com IA (roleplay, simulação). São os concorrentes mais próximos.'],
-           B:['Adjacente','coaching com IA e acompanhamento contínuo, que hoje também incorpora roleplay.'],
-           C:['Generalista','plataformas amplas de aprendizagem corporativa (LMS/LXP) que acrescentaram IA ou roleplay como módulo.'],
-           D:['Inspiração','produtos de fora da categoria, usados só como referência de naming, não como concorrentes.']};
-  const sw={A:'--c1',B:'--c2',C:'--c3',D:'--c4'};
-  document.getElementById('gl-g').innerHTML=Object.keys(t).map(k=>'<div class="gi" style="--sw:var('+sw[k]+')"><span class="gl"><b>'+k+'</b></span><div><span class="gt">'+k+' - '+t[k][0]+':</span> '+esc(t[k][1])+'</div><span class="gn">'+PLAYERS.filter(x=>x.g===k).length+' players</span></div>').join('');
-}
-renderGroups();
 
 /* ---------- tela cheia ---------- */
 const fsBtn=document.getElementById('fsBtn'),cbox=document.querySelector('.chartbox');

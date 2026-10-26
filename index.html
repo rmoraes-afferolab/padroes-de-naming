@@ -55,6 +55,10 @@ details.ctl summary::after{content:'';width:.4rem;height:.4rem;border-right:2px 
 .chartbox{min-width:0}
 svg#sun{width:100%;height:auto;display:block}
 svg#sun text{font-family:var(--font);pointer-events:none}
+.panel.collapsed{padding:0}
+.reopen{font:inherit;font-size:.875rem;background:none;border:0;color:var(--fg);cursor:pointer;text-align:left;padding:.75rem 1.25rem;width:100%;display:flex;justify-content:space-between;gap:.5rem}
+.panel:not(.collapsed) .reopen{padding:0;color:var(--muted);font-size:.8125rem;width:auto;justify-self:end}
+.reopen:hover{text-decoration:underline}
 .back{font:inherit;font-size:.8125rem;background:none;border:1px solid var(--line);color:var(--fg);padding:.25rem .6rem;margin-bottom:.5rem;cursor:pointer}
 .back:hover{border-color:var(--muted)}
 .legend{display:flex;flex-wrap:wrap;gap:.35rem 1rem;font-size:.8125rem;color:var(--muted);margin-top:.5rem}
@@ -512,7 +516,7 @@ function redraw(){
   drawLabels();
   function clicked(p){
     if(!p.children){st.sel=p.data.player.id;rect.attr('stroke',d=>d.data.player&&d.data.player.id===st.sel?css('--fg'):'none');panel(focus||root);return;}
-    focus=p;
+    focus=p;st.showPanel=true;
     const was=shown;
     shown=new Set(p.descendants().slice(1));
     layout(p);
@@ -554,7 +558,19 @@ function panel(p){
   const keys=[...grp.keys()].sort((a,b)=>a==='#'?1:b==='#'?-1:a<b?-1:1);
   if(!st.letter||!grp.has(st.letter))st.letter=(st.sel!=null&&grp.has(initial(PLAYERS[st.sel].name)))?initial(PLAYERS[st.sel].name):keys[0];
   buildPlayerMenu(grp,keys,leaves,p);
+  if(st.lastSel!==st.sel){st.lastSel=st.sel;st.showPanel=false}
+  const title=p===root?'Todos':p.data.name;
+  if(st.sel!=null&&!st.showPanel){
+    el.classList.add('collapsed');
+    el.innerHTML='<button type="button" class="reopen" id="reopen" aria-expanded="false">'+esc(title)+' · '+leaves.length+' players <span aria-hidden="true">▾</span></button>';
+    renderCard();
+    document.getElementById('reopen').onclick=()=>{st.showPanel=true;panel(p)};
+    return;
+  }
+  el.classList.remove('collapsed');
+  if(st.sel!=null)h='<button type="button" class="reopen" id="closePanel" aria-expanded="true">Fechar resumo <span aria-hidden="true">▴</span></button>'+h;
   el.innerHTML=h;renderCard();
+  const cl=document.getElementById('closePanel');if(cl)cl.onclick=()=>{st.showPanel=false;panel(p)};
   el.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{const c=p.children[+b.dataset.k];d3.selectAll('#sun rect').filter(d=>d===c).dispatch('click')});
   el.querySelectorAll('.crumbs button').forEach(b=>b.onclick=()=>{const a=path[+b.dataset.i];d3.selectAll('#sun rect').filter(d=>d===a).dispatch('click');if(a===root){focusRoot()}});
 }

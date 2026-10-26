@@ -1,0 +1,578 @@
+<title>Padrões de naming</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@200;300;400;600;700;900&display=swap">
+<style>
+/* Layout: cabeçalho assimétrico em gradiente; palco com sunburst à esquerda e painel de leitura à direita; segunda página em coluna única com evidências citadas. */
+:root{
+  --bg:#170D17; --raised:#211326; --fg:#F7F7F7; --muted:#BFC3C6; --line:rgba(247,247,247,.16);
+  --accent:#E51C47; --accent-fg:#F7F7F7; --grad:radial-gradient(120% 120% at 80% 0%, #380833 0%, #170D17 55%);
+  --c1:#8769D9; --c2:#1FA39E; --c3:#FAC212; --c4:#E84517; --c5:#5463A6; --c6:#5ED4BD; --c7:#EDA882; --c8:#8A8E92;
+  --ink:#170D17; --font:'Source Sans 3',system-ui,-apple-system,'Segoe UI',sans-serif;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    --bg:#F7F7F7; --raised:#EDE8EE; --fg:#170D17; --muted:#454A4D; --line:rgba(23,13,23,.2);
+    --grad:radial-gradient(120% 120% at 80% 0%, #F5EBFF 0%, #F7F7F7 60%); color-scheme:light;
+  }
+}
+:root[data-theme="light"]{
+  --bg:#F7F7F7; --raised:#EDE8EE; --fg:#170D17; --muted:#454A4D; --line:rgba(23,13,23,.2);
+  --grad:radial-gradient(120% 120% at 80% 0%, #F5EBFF 0%, #F7F7F7 60%); color-scheme:light;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:1rem;line-height:1.5;font-weight:400}
+.wrap{max-width:1240px;margin:0 auto;padding-block:0 3rem;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.top{display:flex;align-items:flex-end;justify-content:space-between;gap:.5rem 1.5rem;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-top:.9rem}
+header.top h1{margin:0 0 .6rem;font-size:1.25rem;font-weight:700;line-height:1.2;letter-spacing:0}
+header.top h1 small{display:block;font-size:.6875rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:.15rem}
+.tarja{background:var(--accent);color:var(--accent-fg);padding:0 .25em;font-weight:700}
+nav.tabs{display:flex;gap:.25rem;margin:0}
+nav.tabs button{font:inherit;font-weight:600;background:none;border:0;color:var(--muted);padding:.6rem 1rem;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-1px;transition:color 140ms cubic-bezier(.22,1,.36,1)}
+nav.tabs button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+nav.tabs button:hover{color:var(--fg)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.controls{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;padding:.9rem 0}
+.ctl{display:flex;align-items:center;gap:.5rem;height:2.25rem;padding:0 .6rem;border:1px solid var(--line);border-radius:0;background:var(--raised);font-size:.875rem;position:relative}
+.ctl>span,.ctl summary>span{font-size:.6875rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.ctl select{font:inherit;font-size:.875rem;color:var(--fg);background:transparent;border:0;cursor:pointer;padding:0 .2rem}
+.ctl select option{background:var(--raised);color:var(--fg)}
+.ctl:hover,.ctl[open]{border-color:var(--muted)}
+details.ctl{display:block;padding:0}
+details.ctl summary{list-style:none;display:flex;align-items:center;gap:.5rem;height:2.25rem;padding:0 .6rem;cursor:pointer}
+details.ctl summary::-webkit-details-marker{display:none}
+details.ctl summary::after{content:'';width:.4rem;height:.4rem;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg) translateY(-2px);margin-left:.2rem}
+.menu{position:absolute;top:calc(100% + 4px);left:0;z-index:20;background:var(--raised);border:1px solid var(--line);border-radius:0;padding:.5rem;min-width:17rem;display:grid;gap:.1rem;box-shadow:0 8px 24px rgba(0,0,0,.28)}
+.menu label{display:flex;gap:.55rem;align-items:center;padding:.3rem .35rem;border-radius:0;cursor:pointer;font-size:.875rem}
+.menu label:hover{background:var(--line)}
+.menu input{accent-color:var(--accent);width:1rem;height:1rem}
+.plmenu{min-width:22rem;max-width:calc(100vw - 2rem);padding:.75rem}
+.plmenu .sub{margin-bottom:.5rem}
+.menu .all{font:inherit;font-size:.8125rem;background:none;border:0;color:var(--muted);text-decoration:underline;cursor:pointer;text-align:left;padding:.2rem .35rem}
+.controls input[type=search]{margin-left:auto;height:2.25rem;font:inherit;font-size:.875rem;background:var(--raised);color:var(--fg);border:1px solid var(--line);border-radius:0;padding:0 .7rem;min-width:8rem;flex:1 1 8rem;max-width:16rem}
+.stage{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr);gap:2rem;align-items:start}
+.chartbox{min-width:0}
+svg#sun{width:100%;height:auto;display:block;max-width:760px;margin:0 auto}
+svg#sun text{font-family:var(--font);pointer-events:none}
+.legend{display:flex;flex-wrap:wrap;gap:.35rem 1rem;font-size:.8125rem;color:var(--muted);margin-top:.5rem}
+.legend i{display:inline-block;width:.7rem;height:.7rem;border-radius:0;margin-right:.35rem;vertical-align:-1px}
+.panel{min-width:0;background:var(--raised);border:1px solid var(--line);border-radius:0;padding:1.25rem;display:grid;gap:1.1rem;}
+.panel h2{margin:0;font-size:1.5rem;font-weight:300;line-height:1.15}
+.panel h2 b{font-weight:700}
+.crumbs{font-size:.8125rem;color:var(--muted)}
+.crumbs button{font:inherit;background:none;border:0;color:var(--fg);text-decoration:underline;cursor:pointer;padding:0}
+.bars{display:grid;gap:.4rem}
+.bar{display:grid;grid-template-columns:minmax(0,12rem) minmax(3rem,1fr) 2.2rem;gap:.6rem;align-items:center;font-size:.875rem;background:none;border:0;color:var(--fg);text-align:left;padding:.15rem 0;cursor:pointer;font-family:inherit}
+.bar:hover .nm{text-decoration:underline}
+.bar .nm{overflow-wrap:anywhere;line-height:1.25}
+.bar .tr{height:.6rem;background:var(--line);border-radius:0;overflow:hidden}
+.bar .fl{display:block;height:100%}
+.bar .pc{text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)}
+.plist{display:flex;flex-wrap:wrap;gap:.3rem}
+.plist button{font:inherit;font-size:.8125rem;border:1px solid var(--line);background:transparent;color:var(--fg);border-radius:0;padding:.15rem .5rem;cursor:pointer}
+.plist button:hover,.plist button[aria-current="true"]{border-color:var(--accent)}
+.plist button[aria-current="true"]{background:var(--accent);color:var(--accent-fg)}
+.sub{font-size:.6875rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);font-weight:600;margin:0 0 .4rem}
+.card{border-top:1px solid var(--line);padding-top:1rem;display:grid;gap:.6rem}
+.card h3{margin:0;font-size:1.25rem;font-weight:700}
+dl.kv{display:grid;grid-template-columns:8.5rem minmax(0,1fr);gap:.25rem .75rem;margin:0;font-size:.875rem}
+dl.kv dt{color:var(--muted)}
+dl.kv dd{margin:0}
+.rtags{display:flex;flex-wrap:wrap;gap:.3rem}
+.rt{font-size:.75rem;font-weight:700;border:1px solid var(--line);border-radius:0;padding:0 .4rem;font-variant-numeric:tabular-nums}
+.note{font-size:.875rem;color:var(--muted);margin:0}
+.def{margin:.6rem 0 0;font-size:.9375rem;line-height:1.5}
+.def b{font-weight:700}
+.ctx{font-size:.8125rem;color:var(--muted)}
+.ins .dir.sm{margin-top:.6rem;font-size:.9375rem;color:var(--muted)}
+.ins .dir.sm b{color:var(--fg)}
+.gh{margin:2.25rem 0 .6rem;font-size:.6875rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.grows{border-top:1px solid var(--line)}
+.grow{display:grid;grid-template-columns:minmax(10rem,15rem) minmax(0,1fr) minmax(0,16rem) 6rem;gap:.35rem 1.5rem;padding:.95rem 0;border-bottom:1px solid var(--line);align-items:start;font-size:.9375rem}
+.grow.l{grid-template-columns:minmax(10rem,15rem) minmax(0,1fr) auto}
+.grow.h{padding:.5rem 0;font-size:.6875rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.grow b{font-weight:700}
+.grow .ex{color:var(--muted);font-size:.875rem}
+.grow .n{text-align:right;font-variant-numeric:tabular-nums;color:var(--muted);font-size:.875rem}
+.grow.h .n{font-size:.6875rem;color:var(--muted)}
+.grow button{font:inherit;font-size:.8125rem;color:var(--fg);background:transparent;border:1px solid var(--line);padding:.3rem .7rem;cursor:pointer}
+.grow button:hover{border-color:var(--accent)}
+.gtabs{display:flex;flex-wrap:wrap;gap:.35rem;margin-bottom:.9rem}
+.gtabs button{font:inherit;font-size:.875rem;color:var(--fg);background:transparent;border:1px solid var(--line);padding:.35rem .8rem;cursor:pointer}
+.gtabs button:hover{border-color:var(--muted)}
+.gtabs button[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+@media (max-width:900px){.grow,.grow.l{grid-template-columns:1fr}.grow.h{display:none}.grow .n{text-align:left}.grow button{justify-self:start}}
+.gl{display:grid;grid-template-columns:repeat(auto-fit,minmax(19rem,1fr));gap:1.5rem 2.5rem;margin-top:1rem}
+.gl h3{margin:0 0 .6rem;font-size:.6875rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.gl dl{margin:0;display:grid;gap:.7rem}
+.gl dt{font-weight:700;font-size:.9375rem}
+.gl dd{margin:.1rem 0 0;font-size:.875rem;color:var(--muted)}
+.side{display:grid;gap:1rem;min-width:0;align-content:start}
+.pcard{background:var(--raised);border:1px solid var(--line);border-radius:0;padding:1.25rem;display:grid;gap:.6rem;align-content:start;min-width:0}
+.pcard h3{margin:0;font-size:1.5rem;line-height:1.1;font-weight:700}
+.kv3{display:grid;grid-template-columns:repeat(auto-fit,minmax(9rem,1fr));gap:.6rem 1.25rem}
+.kv3 div span{display:block;font-size:.6875rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.kv3 div b{font-weight:400;font-size:.9375rem}
+.letters{display:flex;flex-wrap:wrap;gap:.25rem;margin-bottom:.6rem}
+.letters button{font:inherit;font-size:.8125rem;min-width:1.85rem;padding:.2rem .3rem;border:1px solid var(--line);background:transparent;color:var(--fg);border-radius:0;cursor:pointer}
+.letters button:hover:not(:disabled){border-color:var(--muted)}
+.letters button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.letters button:disabled{opacity:.28;cursor:default}
+.empty{color:var(--muted);padding:3rem 0;text-align:center}
+section.sec{margin-top:2.5rem}
+section.sec h2{font-size:1.5rem;font-weight:300;margin:.3rem 0 .4rem}
+section.sec h2 b{font-weight:700}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:0}
+table{border-collapse:collapse;width:100%;min-width:720px;font-size:.875rem}
+th,td{text-align:left;padding:.6rem .8rem;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:.6875rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);font-weight:600}
+tr:last-child td{border-bottom:0}
+td.n{font-variant-numeric:tabular-nums}
+.method{display:grid;grid-template-columns:repeat(auto-fit,minmax(15rem,1fr));gap:1rem 2rem;font-size:.9375rem;color:var(--muted)}
+.method p{margin:0}
+.method strong{color:var(--fg);font-weight:600}
+/* insights */
+.ins-head{max-width:64ch;padding:1.5rem 0 .5rem}
+.ins-head p{color:var(--muted);margin:.4rem 0 0}
+.rleg{display:flex;flex-wrap:wrap;gap:.5rem 1.25rem;font-size:.8125rem;color:var(--muted);margin:1rem 0 .5rem}
+.rleg span b{color:var(--fg)}
+.ilist{display:grid;gap:0}
+.ins{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.3fr);gap:1.5rem 3rem;padding:2rem 0;border-top:1px solid var(--line)}
+.ins h3{margin:.35rem 0 .6rem;font-size:1.5rem;line-height:1.15;font-weight:300;text-wrap:balance}
+.ins .dir{margin:0;font-size:1rem}
+.ins .dir b{font-weight:700}
+.conv{display:flex;align-items:center;gap:.4rem;margin-top:.9rem;font-size:.75rem;color:var(--muted)}
+.ev{display:grid;gap:.9rem;min-width:0}
+blockquote{margin:0;padding:.1rem 0 .1rem .9rem;border-left:3px solid var(--line);font-size:.9375rem}
+blockquote p{margin:0 0 .25rem;overflow-wrap:anywhere}
+blockquote cite{font-style:normal;font-size:.8125rem;color:var(--muted);display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}
+@media (max-width:900px){
+  .stage{grid-template-columns:1fr}
+  .panel{position:static}
+  .ins{grid-template-columns:1fr}
+  .controls input[type=search]{margin-left:0;flex:1 1 100%}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+<header class="top">
+  <h1><small>Mercado · 5 relatórios consolidados</small>Padrões de <span class="tarja">naming</span></h1>
+  <nav class="tabs" role="tablist" aria-label="Páginas do artefato">
+    <button role="tab" id="tab-mapa" aria-selected="true" aria-controls="pg-mapa">Mapa de nomes</button>
+    <button role="tab" id="tab-insights" aria-selected="false" aria-controls="pg-insights">Insights para a IA treinadora</button>
+  </nav>
+</header>
+
+<main>
+<div id="pg-mapa" role="tabpanel" aria-labelledby="tab-mapa">
+  <div class="controls">
+    <label class="ctl"><span>Recorte</span><select id="lensSel"></select></label>
+    <details class="ctl dd" id="repsDd"><summary><span>Relatórios</span><b id="repsTxt"></b></summary><div class="menu" id="repsMenu"></div></details>
+    <details class="ctl dd" id="grpsDd"><summary><span>Grupos</span><b id="grpsTxt"></b></summary><div class="menu" id="grpsMenu"></div></details>
+    <details class="ctl dd" id="plDd"><summary><span>Player</span><b id="plTxt">Selecionar</b></summary><div class="menu plmenu" id="plMenu"></div></details>
+    <input type="search" id="q" placeholder="Buscar player" aria-label="Buscar player">
+  </div>
+  <div class="stage">
+    <div class="chartbox">
+      <svg id="sun" viewBox="0 0 760 760" role="img" aria-label="Gráfico radial consolidado dos players por recorte, subcategoria e player"></svg>
+      <div class="legend" id="legend"></div>
+    </div>
+    <div class="side"><div id="pcard" class="pcard" aria-live="polite"></div><aside class="panel" id="panel" aria-live="polite"></aside></div>
+  </div>
+
+  <section class="sec">
+    <div class="overline">Como ler</div>
+    <h2>Regras da <b>consolidação</b></h2>
+    <div class="method">
+      <p><strong>Um player, uma vez.</strong> Quem aparece em vários relatórios entra uma só vez. A classificação segue a maioria dos relatórios que o citam; as divergências aparecem na ficha do player.</p>
+      <p><strong>Classificação reconstruída.</strong> Os relatórios usam esquemas próprios. A base unifica em seis tipologias e oito territórios, a partir das tabelas de cada relatório. É uma leitura analítica, não uma medição.</p>
+      <p><strong>Limites.</strong> Nenhuma amostra é representativa do mercado. O relatório 4 declara 55 marcas e lista mais linhas. Smarter.IA e Lideres.ai (relatório 3) oferecem treinamento em uso de IA, fora do escopo de roleplay. Nenhum relatório fez busca de anterioridade.</p>
+    </div>
+  </section>
+
+  <section class="sec" id="glossario">
+    <div class="overline">Glossário</div>
+    <h2>O que são os <b>recortes</b> e as categorias</h2>
+    <p class="note" style="max-width:70ch">Cada recorte combina duas dimensões. A primeira forma o anel interno do gráfico, a segunda forma o anel seguinte e os players ficam no anel externo. Clique em uma categoria para aprofundar; o painel à direita explica o que ela significa.</p>
+    <h3 class="gh">Recortes</h3>
+    <div class="grows" id="gl-l"></div>
+    <h3 class="gh">Categorias</h3>
+    <div class="gtabs" id="gl-tabs" role="tablist" aria-label="Dimensão"></div>
+    <div class="grows" id="gl-c"></div>
+  </section>
+</div>
+
+<div id="pg-insights" role="tabpanel" aria-labelledby="tab-insights" hidden>
+  <div class="ins-head">
+    <div class="overline">Diretrizes para a IA treinadora</div>
+    <h2 style="font-size:2rem;font-weight:200;margin:.4rem 0 0;line-height:1.1"><b style="font-weight:700">14 padrões</b> do mercado, prontos para orientar a criação de nomes</h2>
+    <p>Ordenados da diretriz mais estrutural para a mais operacional. A marca de convergência mostra em quais relatórios o padrão aparece. Toda citação é literal e indica o relatório e a seção.</p>
+  </div>
+  <div class="rleg" id="rleg"></div>
+  <div class="ilist" id="ilist"></div>
+</div>
+</main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script>
+const INSIGHTS=[{"tema": "Arquitetura", "t": "O mercado separa a marca, que distingue, do descritor, que explica.", "d": "Criar a identidade da IA treinadora em duas camadas: um nome de marca, que a distingue, e uma frase descritiva, que diz o que ela faz. Não exigir de um único nome as duas funções.", "ex": "Yoodli é o nome; “AI Roleplays” é o descritor.", "nb": "", "conv": [1, 2, 5], "ev": [[1, "Parte 8.3", "Clareza no descritor; significado na marca", "Posição recomendada pelo relatório 1 para a tensão entre clareza e significado do nome."], [1, "Parte 4.8", "Yoodli: nome inventado que suportou três descritores", "Exemplo de marca que manteve o mesmo nome enquanto a descrição do produto mudou três vezes."], [2, "Comparative market and brand inventory", "generalists are especially comfortable with architecture rather than forcing every meaning into a single name.", "Sobre as plataformas generalistas de aprendizagem, como Skillsoft, Udemy e Docebo: usam nomes e módulos separados em vez de um nome que carregue todo o significado."], [5, "Parte 1.1", "O principal padrão é a separação entre marca e explicação", "Título da primeira conclusão do relatório 5."]]}, {"tema": "IA no nome", "t": "A IA aparece na descrição; poucos nomes a trazem no núcleo.", "d": "Não usar “IA” como elemento distintivo do nome. Comunicar a tecnologia na frase descritiva ou na assinatura. Nos cinco relatórios, entre cerca de 5% e 22,5% dos nomes trazem IA de forma explícita.", "ex": "Docebo, Degreed e Valence não põem IA no nome do produto; ela aparece na descrição.", "nb": "Entre nomes de produto, a proporção de IA explícita é maior do que entre marcas corporativas (27,8% contra 7,1% no relatório 5), mas segue minoritária e a amostra é pequena.", "conv": [1, 2, 3, 4, 5], "ev": [[1, "Parte 4.5", "Marcas corporativas fortes (Docebo, Degreed, Cornerstone, Valence) mantêm a IA fora do nome do produto e a comunicam no descritor.", "Relatório 1, sobre 40 nomes."], [2, "Executive summary and scope", "Only five of the 36 primary names in the coded sample, 13.9%, explicitly expose AI in the name itself.", "Relatório 2: apenas 5 de 36 nomes principais trazem IA de forma explícita."], [3, "Parte 4", "80% das empresas mapeadas evitam estampar o acrônimo \"IA\" ou \"AI\" no nome comercial de sua marca principal", "Relatório 3, na leitura da matriz de cruzamentos."], [4, "Parte 4.4", "Para a “IA Treinadora”, isso sugere que “IA” não deve ser o núcleo do nome, mas pode aparecer como descritor ou assinatura.", "Conclusão do relatório 4 depois de medir que cerca de 5% dos nomes trazem IA explícita."], [5, "Parte 4.6", "Nesta amostra, IA aparece proporcionalmente mais nos nomes de produtos e extensões.", "Relatório 5, sobre onde a IA aparece com mais frequência."]]}, {"tema": "Personificação", "t": "Nome próprio de IA é padrão do coaching; “Treinadora” já personifica sem querer.", "d": "Decidir antes da criação se a IA terá persona. “IA Treinadora” é feminino e já sugere uma figura; um nome próprio feminino seguiria a convenção dos coaches de IA e perderia distintividade. Se houver persona, escolher nome e gênero de forma deliberada.", "ex": "Persona no coaching: Nadia (Valence), AIMY (CoachHub), Arti (Rising Team).", "nb": "", "conv": [1, 2, 5], "ev": [[1, "Parte 4.7", "Os diretos nomeiam a mecânica; o coaching adjacente personifica;", "Relatório 1 compara os concorrentes diretos (roleplay) com os adjacentes (coaching de IA)."], [2, "Comparative market and brand inventory", "Third, adjacent coaching creates a distinct naming behavior: the AI becomes somebody.", "Relatório 2, sobre Nadia, AIMY, Rocky, Huckleberry e Arti."], [1, "Parte 8.2", "segue a convenção de coaches de IA com nomes femininos ou femininizados (Nadia, AIMY, CAISY, Hana, Luri), o que reduz a distintividade", "Relatório 1, sobre o efeito do gênero feminino em “IA Treinadora”."], [2, "Comparative market and brand inventory", "That is strategically useful evidence, but not proof that IA Treinadora itself should be personified.", "Ressalva do próprio relatório 2: o padrão do mercado não prova que a IA treinadora deva ter persona."]]}, {"tema": "Brasil", "t": "No Brasil o nome costuma explicar; o espaço distintivo em português está pouco ocupado.", "d": "No Brasil predominam nomes que descrevem a função, e poucos estão em português. Um nome distintivo em português tende a diferenciar a IA treinadora, mas a vantagem é menor do que os relatórios 1, 4 e 5 sugerem. Na base consolidada, 29% dos 34 players brasileiros são descritivos (21% entre os 62 internacionais) e 26% são inventados (19%).", "ex": "", "nb": "A amostra brasileira é pequena (8 nomes no relatório 1), então a leitura é direcional.", "conv": [1, 3, 4, 5], "ev": [[1, "Parte 7", "5 de 8 em base inglesa; 2 em português", "Idioma dos 8 nomes brasileiros do relatório 1."], [1, "Parte 4.7", "os 8 nomes brasileiros dividem-se em 4 justaposições, 1 palavra existente, 1 portmanteau, 1 derivação e 1 truncamento, sem neologismo, metáfora ou nome próprio pleno.", "Construção dos 8 nomes brasileiros do relatório 1. Os relatórios 2 e 4 trazem outros nomes brasileiros inventados, como Adeptly e Inbix."], [4, "Parte 7", "O mercado brasileiro parece mais pragmático e orientado à clareza, enquanto o mercado internacional é mais tolerante a nomes distintivos e metafóricos.", "Interpretação do relatório 4 sobre Brasil e exterior."], [5, "Parte 1.5", "Brasil-presença: cinco descritivos em nove registros.", "Relatório 5. “Brasil-presença” são as marcas com atuação no Brasil."], [5, "Parte 1.5", "Demais referências: cinco descritivos em 23 registros.", "Relatório 5, nas marcas sem foco no Brasil."], [2, "Market landscape, research questions and evidence base", "the Brazilian sub-sample is only eight names and category composition differs, so this cannot be generalized statistically.", "Ressalva do relatório 2 sobre o tamanho da amostra brasileira."]]}, {"tema": "Saturação", "t": "Os nomes que descrevem a prática já formam uma vizinhança lotada.", "d": "Evitar como núcleo do nome palavras das famílias simulação, prática, roleplay, skill e coach, e as metáforas já usadas por concorrentes diretos, como simulador de voo e laboratório. Quem entra por aí fica verbalmente parecido com Pratique IA, Roleplays, RealTalk e Hyperbound Practice.", "ex": "", "nb": "", "conv": [1, 3, 5], "ev": [[1, "Parte 8.4", "Os radicais \"simul-\", \"pratic-\", \"roleplay\", \"skill\" e \"coach\" como núcleo.", "Relatório 1, na lista do que evitar no nome."], [1, "Parte 8.1", "a estrutura \"IA + termo de prática\" é a mesma de \"Pratique IA\", concorrente direto que também usa \"Laboratório de Habilidades\" e \"simulador de voo\"", "Relatório 1, sobre a semelhança entre “IA Treinadora” e o concorrente Pratique IA."], [1, "Parte 8.3", "Nomear \"prática\" coloca a marca entre 9 nomes semelhantes", "Relatório 1: são 9 nomes na amostra com prática como território principal."], [3, "Parte 6", "termos operacionais descritivos da função imediata (\"Sales Roleplay\", \"Call Simulation\")", "Relatório 3, ao descrever a faixa de alta saturação."], [5, "Parte 6.3", "Pratique IA, Roleplays, RealTalk e Hyperbound Practice ilustram a proximidade entre mecanismo, prática e resultado. Não são nomes idênticos, mas operam em uma vizinhança verbal bastante ocupada.", "Relatório 5, zona de proximidade “treino + IA + performance”."]]}, {"tema": "Segurança", "t": "Segurança é a promessa mais repetida e quase não aparece em nomes.", "d": "Usar a segurança psicológica (praticar sem medo de errar) como promessa da experiência e do descritor. Como território de nome, tratar como ponto em aberto: o relatório 1 desaconselha, e os relatórios 2, 3 e 4 recomendam.", "ex": "", "nb": "", "conv": [1, 2, 3, 4], "ev": [[1, "Parte 4.4", "nenhum nome ocupa \"Segurança, confiança e acolhimento\", embora seja uma das promessas mais repetidas no discurso", "Relatório 1, sobre os 40 nomes da amostra."], [2, "Comparative market and brand inventory", "“Safe/risk-free practice” recurs in copy, but safety is essentially absent as a primary-name territory.", "Relatório 2: a promessa aparece nos textos de venda, não nos nomes."], [1, "Parte 6", "segurança está saturada como promessa e seria um nome", "Motivo pelo qual o relatório 1 desaconselha segurança como nome."], [4, "Parte 1", "Territórios como “parceiro de prática”, “espaço seguro de experimentação”, “tom e escuta” e “metáfora esportiva” apresentam menor saturação e boa aderência à proposta.", "Posição contrária: o relatório 4 recomenda “espaço seguro de experimentação” como território de nome."]]}, {"tema": "Territórios livres", "t": "Perspectiva, fluência e ensaio aparecem como espaços livres em mais de um relatório.", "d": "Abrir a exploração criativa por perspectiva, fluência e ensaio, conferindo antes se cada ideia se ajusta ao produto. Território é um campo de significado para explorar, não um nome pronto.", "ex": "Perspectiva: Bodyswaps (troca de lugar). Fluência: Second Nature (habilidade que vira natural).", "nb": "Espaço vazio não é oportunidade garantida: o território precisa ter aderência ao produto.", "conv": [1, 3, 4, 5], "ev": [[1, "Parte 6", "fluência e hábito, perspectiva e reflexão, e ensaio como preparação para o real, todos em português", "Relatório 1, sobre os espaços menos explorados por concorrentes comparáveis."], [4, "Parte 4.3", "Territórios como “parceiro de prática” (Sparring), “perspectiva e reflexão” (Bodyswaps), “tom e escuta” (Tenor) e “descoberta” (Noetic) são menos saturados e oferecem maior potencial de diferenciação.", "Relatório 4, sobre territórios de menor saturação."], [3, "Parte 9", "Foco no resultado final — transformar conversas difíceis em diálogos fluidos, claros e de alto impacto interpessoal", "Relatório 3, território “Fluência interpessoal e conexão”, definido como prioridade 1."], [5, "Parte 9.8", "Repertório e perspectiva combinam conexão com o produto e menor concentração nominal observada.", "Relatório 5, ao justificar a prioridade dos territórios repertório e perspectiva."], [5, "Parte 6.4", "Um espaço vazio não é automaticamente uma oportunidade", "Ressalva do relatório 5."]]}, {"tema": "Arquétipo", "t": "“Treinadora” sugere instrutor; a proposta descreve prática, reflexão e desenvolvimento.", "d": "Definir o papel da IA antes de criar nomes: instrutor (ensina e corrige), parceiro de prática (treina junto) ou ambiente (espaço para experimentar). O papel escolhido orienta o território do nome.", "ex": "", "nb": "", "conv": [1, 2, 3, 5], "ev": [[1, "Parte 8.2", "quem treina prescreve, corrige e mede; o nome reforça hierarquia, e não parceria.", "Relatório 1, sobre a palavra “treinadora”."], [2, "Executive summary and scope", "But it also pulls the brand toward an instructional/performance archetype: someone who trains, corrects or prepares you. That is narrower than the product proposition in the brief, which includes reflection, experimentation, personalized development and continuous growth.", "Relatório 2, sobre “treinadora” frente à proposta descrita no briefing."], [3, "Parte 6", "vocabulário instrucional rígido (\"Treinador\", \"Professor\", \"Instructor\")", "Relatório 3 coloca esse vocabulário na faixa de alta saturação."], [5, "Parte 8.2", "Queremos que o profissional encontre alguém que o instrui, um parceiro com quem pratica ou um ambiente em que desenvolve seu próprio repertório?", "Pergunta de decisão proposta pelo relatório 5."]]}, {"tema": "Amplitude", "t": "O nome precisa servir quando o produto crescer além de treinar.", "d": "Evitar raízes que prendam a marca ao treinamento, a vendas, à fala ou à simulação. O mercado caminha para desenvolvimento e habilidades humanas, e o produto tende a crescer além da prática conversacional.", "ex": "", "nb": "Os relatórios tratam isso como risco a testar, não como regra.", "conv": [1, 3, 5], "ev": [[1, "Parte 8.1", "\"treinadora\" ancora o produto no treinamento, quando o mercado se desloca para \"enablement\" (Bersin) e \"human skills\" (Yoodli).", "Relatório 1. “Enablement” é o termo de mercado para capacitar equipes a executar bem o trabalho no dia a dia."], [3, "Parte 8", "Se o produto evoluir para além da prática conversacional pontual, tornando-se uma plataforma holística de análise de potencial, mentoria de carreira ou ecossistema de cultura interpessoal, o nome \"Treinadora\" limitará a percepção do mercado.", "Relatório 3, sobre o teto de expansão do nome provisório."], [5, "Parte 8.4", "Treinamento pode sugerir eventos ou exercícios delimitados.", "Relatório 5, na lista de riscos de expansão."], [5, "Parte 8.4", "São riscos estratégicos a testar, não impedimentos universais.", "Ressalva do relatório 5 sobre essa lista."]]}, {"tema": "Registro de marca", "t": "Nome descritivo é difícil de registrar como marca.", "d": "Tratar os relatórios como insumo criativo, não como parecer jurídico. Antes de adotar qualquer candidato, fazer busca de anterioridade e consultar especialista. Nomes que apenas descrevem a função tendem a não ser aceitos pelo INPI, o órgão brasileiro de registro de marcas.", "ex": "", "nb": "", "conv": [1, 2, 3], "ev": [[1, "Parte 8.1", "o Manual do INPI considera irregistráveis as expressões exclusivamente descritivas.", "Relatório 1, sobre o nome provisório “IA Treinadora”."], [3, "Parte 8", "é meramente descritivo da tecnologia e da sua função", "Relatório 3, sobre o termo “IA Treinadora”, em “Riscos da manutenção do nome provisório”."], [2, "Executive summary and scope", "No conclusion in this report should be interpreted as trademark clearance.", "Ressalva do relatório 2: nenhum resultado equivale a liberação de marca."]]}, {"tema": "Construção", "t": "Nomes distintivos são curtos e fáceis de pronunciar.", "d": "Preferir nomes com até duas sílabas no núcleo e pronúncia evidente em português. Se o nome for inventado, prever investimento para construir o significado, porque ele não explica nada sozinho.", "ex": "Nomes curtos do mercado: Yoodli, Virti, Exec, AIMY, Grow, Spark.", "nb": "", "conv": [1, 4], "ev": [[1, "Parte 4.3", "17 nomes (42,5%) têm elemento nuclear de até duas sílabas", "Relatório 1, sobre os 40 nomes da amostra."], [1, "Parte 4.3", "A brevidade é a norma entre os distintivos; os nomes com cinco ou mais sílabas são quase sempre descritivos.", "Relatório 1, na mesma análise."], [4, "Parte 4.5", "nomes inventados (Yoodli, Mursion) exigem investimento em construção de significado.", "Relatório 4, sobre o custo de construir significado em nome inventado."], [1, "Parte 8.4", "Grafias que dificultem a pronúncia em português (a ambiguidade de \"Rolplai\", o \"K-see\" de CAISY).", "Relatório 1, na lista do que evitar no nome."]]}, {"tema": "Metáfora", "t": "As metáforas que funcionam nomeiam o resultado ou o mecanismo.", "d": "Buscar metáfora que nomeie o que a pessoa passa a fazer (resultado) ou como ela aprende (mecanismo), não a função do produto. Evitar as metáforas que concorrentes diretos já usam (simulador de voo, laboratório) e as de disputa, como luta, que podem soar competitivas em desenvolvimento humano.", "ex": "Second Nature nomeia o resultado; Bodyswaps nomeia o mecanismo.", "nb": "", "conv": [1, 4, 5], "ev": [[1, "Parte 4.8", "Second Nature: nomeia o resultado da prática (o hábito internalizado), com extensão natural para qualquer competência.", "Relatório 1, sobre um dos nomes mais citados nos cinco relatórios."], [1, "Parte 4.8", "Bodyswaps: nomeia o mecanismo pedagógico de troca de perspectiva, seu diferencial declarado.", "Relatório 1."], [1, "Parte 8.4", "As metáforas de simulador de voo e laboratório.", "Relatório 1, na lista do que evitar. Ambas já são usadas pelo concorrente Pratique IA."], [4, "Parte 6.2", "Associação a competição/luta pode não ressoar em contextos de desenvolvimento humano", "Relatório 4, sobre o nome Sparring, metáfora de treino de boxe."], [5, "Parte 7.3", "Isso não comprova maior eficácia, mas amplia o repertório além de “AI + função”.", "Relatório 5, sobre Sparring, Konviva e Ludos Pro: metáfora e associação ampliam as opções, sem prova de eficácia."]]}, {"tema": "Arquitetura de marca", "t": "A pergunta vem antes do nome: marca própria ou submarca?", "d": "Decidir se a IA treinadora será marca autônoma ou submarca da Afferolab antes de criar. Especialistas costumam usar o nome do produto como marca principal; plataformas generalistas usam marca corporativa mais descritor. A decisão muda o quanto o nome precisa distinguir sozinho.", "ex": "Docebo mantém a marca e nomeia o produto “Docebo Roleplay”.", "nb": "", "conv": [1, 2], "ev": [[1, "Parte 4.7", "especialistas usam o nome do produto como marca principal (Yoodli, Retorio, Pratique IA); generalistas usam \"marca corporativa + descritor\" para prática (\"Docebo Roleplay\", \"Coursera Coach\") e reservam nomes evocativos para camadas de plataforma.", "Relatório 1, comparando especialistas e generalistas."], [2, "Comparative market and brand inventory", "Docebo can use “Docebo Roleplay” while maintaining the Docebo masterbrand.", "Relatório 2: exemplo de submarca descritiva sob uma marca corporativa."], [1, "Parte 8.5", "Arquitetura: marca autônoma (house of brands) ou submarca endossada (\"[Empresa] + Nome\")?", "Relatório 1, primeira das sete decisões que pede antes da criação do nome."]]}, {"tema": "Peso das evidências", "t": "Os relatórios divergem em amostra e em resultado; vale o que se repete.", "d": "Dar mais peso ao que aparece em três ou mais relatórios. Cada relatório tem amostra e resultado próprios: relatório 1, 40 nomes, descritivo 40%; relatório 2, 36 nomes, inventado 25%; relatório 3, 15 marcas, sugestivo 40%; relatório 4, 59 linhas, inventado cerca de 33%; relatório 5, 32 nomes, descritivo 31%. Nenhuma amostra representa o mercado.", "ex": "", "nb": "", "conv": [1, 2, 3, 4, 5], "ev": [[5, "Alcance e ressalvas essenciais", "A classificação dos nomes e as recomendações são interpretações analíticas.", "Relatório 5, nas ressalvas iniciais."], [5, "Parte 4.2", "A leitura correta não é “o mercado prefere nomes descritivos”. É: a descrição literal foi a maior categoria isolada nesta seleção, mas não constitui a maioria dos registros.", "Relatório 5, sobre como ler a própria contagem de tipologias."], [4, "Parte 4.1", "Frequência das tipologias linguísticas (amostra de 55 marcas)", "Título da seção do relatório 4. A tabela de base do mesmo relatório lista 59 linhas."], [2, "Market landscape, research questions and evidence base", "cannot be generalized statistically.", "Relatório 2, sobre a amostra brasileira de 8 nomes."]]}];
+const REPORTS={
+ 1:{n:'Relatório 1',arq:'Inteligência de mercado, naming e posicionamento para a plataforma IA Treinadora.md',amostra:'40 nomes',tip:'Descritivo (40%)',ia:'22,5%',ter:'Ensaio e bastidor, fluência, espelho e perspectiva'},
+ 2:{n:'Relatório 2',arq:'Market Intelligence, Naming and Positi.md',amostra:'36 nomes (em inglês)',tip:'Inventado (25%); descritivo 5,6%',ia:'13,9%',ter:'Diálogo, experimentação segura, agência e insight'},
+ 3:{n:'Relatório 3',arq:'Pesquisa de Naming e Posicionamento.md',amostra:'15 marcas na tabela',tip:'Sugestivo ou evocativo (40%)',ia:'20%',ter:'Prática segura, fluência interpessoal'},
+ 4:{n:'Relatório 4',arq:'deepseek_markdown_20261026_60991a.md',amostra:'55 declaradas; 59 linhas na tabela',tip:'Inventado (cerca de 33%)',ia:'cerca de 5%',ter:'Parceiro de prática, espaço seguro, tom e escuta'},
+ 5:{n:'Relatório 5',arq:'relatorio_inteligencia_mercado_naming_IA_Treinadora.md',amostra:'32 nomes',tip:'Descritivo (31%)',ia:'18,8%',ter:'Repertório, perspectiva, autoria'}
+};
+const LAB={
+ g:{A:'Diretos (prática e roleplay)',B:'Adjacentes (coaching de IA)',C:'Generalistas (plataformas)',D:'Inspiração (fora da categoria)'},
+ o:{BR:'Brasil',INT:'Internacional',ND:'Origem não informada'},
+ t:{D:'Descritivo',S:'Sugestivo ou metafórico',I:'Inventado',A:'Antroponímico',C:'Composto ou híbrido',X:'Sigla'},
+ s:{P:'Prática e simulação',H:'Orientação e persona',R:'Performance e domínio',C:'Conversa e comunicação',L:'Plataforma e aprendizagem',T:'Tecnologia e futuro',V:'Perspectiva e crescimento',N:'Sem território claro'},
+ ai:{E:'IA explícita no nome',S:'IA sugerida por vocabulário',N:'IA só no descritor ou ausente'},
+ p:{1:'Personificado',0:'Não personificado'}
+};
+const KEYNAME={g:'Grupo',o:'Origem',t:'Tipologia',s:'Território',ai:'Relação com IA',p:'Personificação'};
+const LENSES=[
+ {id:'gt',label:'Grupo › Tipologia',k:['g','t']},
+ {id:'ot',label:'Origem › Tipologia',k:['o','t']},
+ {id:'ts',label:'Tipologia › Território',k:['t','s']},
+ {id:'st',label:'Território › Tipologia',k:['s','t']},
+ {id:'at',label:'IA no nome › Tipologia',k:['ai','t']},
+ {id:'pt',label:'Personificação › Tipologia',k:['p','t']}
+];
+/* [nome, grupo, origem, tipologia, território, IA, personificado, relatórios, nota] */
+const RAW=[
+["Yoodli","A","INT","I","N","N",0,[1,2,3,4,5],"Relatórios 1, 2 e 4: inventado. Relatório 3: sugestivo. O nome sustentou três descritores sem mudar de marca."],
+["VirtualSpeech","A","INT","D","C","S",0,[1,4,5],"Relatórios 1 e 5: descritivo, composição de meio e competência."],
+["Rocky.ai","B","INT","A","H","E",1,[1,2,5],"Relatório 1 o coloca entre os diretos; relatórios 2 e 5, entre os adjacentes."],
+["PlayAvatar","A","INT","D","P","S",0,[1,2],"Relatório 1: descritivo. Relatório 2: composto."],
+["Virti","A","INT","I","T","S",0,[1,2,4],"Relatório 1: sugestivo. Relatórios 2 e 4: inventado."],
+["Skillsoft / CAISY","A","INT","X","H","E",1,[1,2,3,4,5],"Relatórios 1, 3 e 5 o tratam como direto; relatórios 2 e 4, como generalista. Relatório 5: a personificação é leitura adicional."],
+["Bodyswaps","A","INT","S","V","N",0,[1,2,3,4,5],"Metáfora de troca de perspectiva. Depende de inglês para ser entendida."],
+["Mursion","A","INT","I","P","N",0,[1,4,5],""],
+["Retorio","A","INT","I","C","N",0,[1,3,4],"Relatório 3: sugestivo, evoca retórica."],
+["Second Nature","A","INT","S","R","N",0,[1,2,3,4,5],"Nomeia o resultado da prática, o hábito internalizado."],
+["Hyperbound","A","INT","C","R","N",0,[1,2,3,4,5],"Relatório 1: sugestivo. Relatórios 2 e 3: composto."],
+["Quantified","A","INT","S","R","N",0,[1,2,3],"Relatório 3 o lê como descritivo e com IA explícita (Quantified AI)."],
+["Exec","A","INT","S","R","N",0,[1],""],
+["Rehearsal (ELB Learning)","A","INT","D","P","N",0,[1],""],
+["Pratique IA","A","BR","D","P","E",0,[1,5],"Mesma estrutura “termo de prática + IA” do nome provisório."],
+["SIMULA","A","BR","D","P","N",0,[1],""],
+["DOT Skills","A","BR","D","P","N",0,[1,4,5],"Relatório 4: sigla mais descritivo."],
+["Future-se.AI","A","BR","S","T","E",0,[1,2],"Imperativo em português com sufixo .AI."],
+["Play2Learn","A","BR","C","L","N",0,[1,4],"Relatório 1: sugestivo. Relatório 4: composto."],
+["Simulayer","A","BR","C","P","S",0,[1,4],"Relatório 1: sugestivo. Relatório 4: composto (simula + layer)."],
+["Sales Simulator","A","ND","D","P","N",0,[1],""],
+["SimSkills","A","INT","D","P","N",0,[1,4],""],
+["Rolplai","A","ND","D","P","E",0,[1],"Relatório 1 aponta ambiguidade de pronúncia em português."],
+["RolPlay","A","ND","D","P","N",0,[1],""],
+["MeltingSpot Roleplay","A","INT","D","P","N",0,[1],""],
+["PitchMonster","A","INT","C","R","N",0,[2],""],
+["Biatrix Studio","A","BR","I","N","N",0,[2,3,5],"Elemento inventado mais descritor."],
+["Asertio / Maity","A","ND","A","H","N",1,[2],"Agente apresentado como quem acompanha, treina e mede vendedores."],
+["Trellus","A","ND","S","R","N",0,[2],""],
+["Pavone","A","ND","S","R","N",0,[2],"Palavra existente usada de forma arbitrária."],
+["Lateral","A","ND","S","R","N",0,[2],"Palavra existente, associativa."],
+["Sparring Labs","A","BR","S","P","N",0,[4,5],"Metáfora esportiva. Relatório 4 aponta risco de conotação de luta."],
+["Adeptly","A","BR","I","R","N",0,[4],""],
+["Tenor","A","BR","S","C","N",0,[4],"Metáfora de tom de voz."],
+["Imersa","A","BR","S","P","N",0,[4],""],
+["LÉIA","A","BR","A","H","N",1,[4],""],
+["Closerfy","A","BR","I","R","N",0,[4],""],
+["aBeelity","A","BR","I","R","N",0,[4],""],
+["SkillGym","A","INT","C","P","N",0,[4],""],
+["TrainTool","A","INT","D","P","N",0,[4],""],
+["Outdoo AI","A","INT","I","R","E",0,[4],""],
+["Kendo AI","A","INT","S","R","E",0,[4],""],
+["Zenarate","A","INT","I","P","N",0,[4],""],
+["Call Simulator","A","INT","D","P","N",0,[4,5],""],
+["Lexarius","A","INT","I","C","N",0,[4],""],
+["RoleFit Studio","A","INT","C","P","N",0,[4],""],
+["Face Up","A","INT","S","C","N",0,[4],""],
+["Noetic","A","INT","S","V","N",0,[4],""],
+["Tough Tongue AI","A","INT","S","C","E",0,[4],""],
+["Attensi","A","INT","I","P","N",0,[4,5],"Relatório 5 destaca o produto RealTalk, que usa a ideia de parceiro de prática."],
+["Synthesia Roleplay Sessions","A","INT","D","P","N",0,[4],""],
+["Roleplays","A","BR","D","P","N",0,[3,4,5],"Termo técnico em inglês usado como nome."],
+["LPH Roleplay (Leads Per Hour)","A","ND","X","P","N",0,[5],"Relatório 5: a evidência localizada é branded content."],
+["JoySuite","A","INT","D","C","N",0,[5],"Difficult Conversation Simulator."],
+["Ujamaa Consultoria","A","BR","D","C","N",0,[5],"Simulador de Conversas Difíceis."],
+["Valence / Nadia","B","INT","A","H","N",1,[1,2,5],""],
+["CoachHub / AIMY","B","INT","A","H","E",1,[1,2,3,4,5],"Relatórios 1 e 4: antroponímico e acrônimo ao mesmo tempo."],
+["BetterUp / Grow","B","INT","S","V","N",0,[1,2,4,5],""],
+["Risely / Merlin","B","INT","A","H","N",1,[1],"Nome próprio com metáfora de mentor."],
+["Torch / Spark","B","INT","S","V","N",0,[1],"Arquitetura temática tocha e faísca."],
+["Crehana / Hana AI","B","INT","A","H","E",1,[1],""],
+["Huckleberry","B","INT","S","H","N",0,[2],"Palavra existente usada como nome próprio."],
+["Rising Team / Arti","B","INT","A","H","N",1,[2],""],
+["Coach Marlee (Fingerprint for Success)","B","INT","A","H","N",1,[3],""],
+["Hone AI","B","INT","S","V","E",0,[5],""],
+["Coachello","B","INT","C","H","N",0,[4,5],"Coach mais sufixo."],
+["Cloverleaf","B","INT","S","V","N",0,[4],""],
+["Pinnacle Pascal","B","INT","A","H","N",1,[4],""],
+["Eolas","B","INT","S","V","N",0,[4],""],
+["BeConfident","B","BR","D","C","N",0,[4],""],
+["Docebo (Roleplay, Harmony)","C","INT","I","L","N",0,[1,2,4,5],"Marca inventada com submarcas descritiva (Roleplay) e metafórica (Harmony)."],
+["Udemy Business","C","INT","I","L","N",0,[1,2,4],"Submarca AI Role Play em nome descritivo."],
+["Coursera Coach","C","INT","D","H","N",0,[1,4],""],
+["LinkedIn Learning","C","INT","D","L","N",0,[1,2,4],"Submarca Role Play with AI-Powered Coaching."],
+["Degreed Maestro","C","INT","S","H","N",0,[1,4,5],"Maestro substituiu um nome funcional (Degreed Assistant)."],
+["Cornerstone Galaxy","C","INT","S","L","N",0,[1,2,4],""],
+["Alura / Luri","C","BR","A","H","N",1,[1],""],
+["UBITS / Serena AI","C","ND","A","H","E",1,[1,5],"Relatório 1 lê “Coach de liderazgo” como descritivo."],
+["Sana Learn","C","INT","I","L","N",0,[2,4],""],
+["Ludos Pro","C","BR","S","L","N",0,[2,5],""],
+["hackÜ","C","BR","S","L","N",0,[2],""],
+["Kursei","C","BR","C","L","N",0,[2],""],
+["Café EAD","C","BR","S","L","N",0,[2],""],
+["Inbix","C","BR","I","L","N",0,[2],""],
+["Lumiti.ai","C","BR","I","L","E",0,[2],""],
+["Gupy Educação","C","BR","D","L","N",0,[3],""],
+["CrossKnowledge","C","INT","C","L","N",0,[3],""],
+["Smarter.IA","C","BR","D","T","E",0,[3],"Fora do escopo: treinamento em uso de IA."],
+["Lideres.ai","C","BR","D","T","E",0,[3],"Fora do escopo: capacitação em uso de IA."],
+["Absorb","C","INT","S","L","N",0,[4],""],
+["Edusense","C","BR","C","L","N",0,[4],""],
+["Konviva","C","BR","I","L","N",0,[4,5],""],
+["Woli","C","BR","I","L","N",0,[4],""],
+["Keeps","C","BR","D","L","N",0,[4],""],
+["Enabley","C","BR","I","L","N",0,[4],""],
+["Kubo / KIA","C","BR","A","H","N",1,[4],""],
+["Refatorando","C","BR","S","L","N",0,[4],""],
+["360Learning","C","INT","D","L","N",0,[5],""],
+["Praktika","D","INT","S","P","N",0,[2],""],
+["ELSA Speak","D","INT","C","C","N",0,[2],""],
+["Replika","D","INT","S","H","N",1,[2],"Posicionado como companheiro de IA."],
+["Notion","D","INT","S","L","N",0,[2,5],""],
+["Duolingo Max","D","INT","I","L","N",0,[5],"Nível de assinatura da marca-mãe."],
+["Articulate Rise","D","INT","S","L","N",0,[5],"Metáfora de ascensão."],
+["Speak","D","INT","D","C","N",0,[4],""]
+];
+const PLAYERS=RAW.map((a,i)=>({id:i,name:a[0],g:a[1],o:a[2],t:a[3],s:a[4],ai:a[5],p:a[6],r:a[7],note:a[8]}));
+const LENSDEF={
+ gt:'Mostra como cada grupo competitivo nomeia seus produtos.',
+ ot:'Compara os nomes de marcas brasileiras e internacionais.',
+ ts:'Mostra que campo de significado cada tipo de nome costuma ocupar.',
+ st:'Mostra, em cada campo de significado, quais tipos de nome são usados.',
+ at:'Mostra se a presença de IA no nome se associa a algum tipo de nome.',
+ pt:'Mostra quais tipos de nome dão uma persona à IA.'
+};
+const DEF={
+ g:{A:'Plataformas cuja oferta central é praticar conversas com IA, em roleplay e simulação. São os concorrentes mais próximos da IA treinadora. Exemplos: Yoodli, Second Nature, Hyperbound, Pratique IA.',
+    B:'Plataformas de coaching com IA, que acompanham a pessoa de forma contínua e hoje incorporam roleplay. Exemplos: Valence (Nadia), CoachHub (AIMY), BetterUp (Grow).',
+    C:'Plataformas amplas de aprendizagem corporativa que acrescentaram IA e roleplay como módulo. Exemplos: Docebo, Udemy Business, Degreed, Cornerstone.',
+    D:'Produtos de fora da categoria, usados apenas como referência de naming. Exemplos: Duolingo Max, Notion, Replika.'},
+ o:{BR:'Marcas com origem ou atuação principal no Brasil.',
+    INT:'Marcas de origem fora do Brasil, como América do Norte, Europa e Ásia.',
+    ND:'Marcas cuja origem os relatórios não informam.'},
+ t:{D:'O nome diz a função. É claro de imediato, mas difícil de diferenciar e de registrar como marca. Exemplos: Roleplays, SimSkills, Call Simulator.',
+    S:'O nome evoca uma ideia, um benefício ou uma imagem, sem descrever a função. Exemplos: Second Nature (a habilidade que se torna natural), Bodyswaps (a troca de perspectiva), Exec.',
+    I:'Palavra nova, sem significado prévio. Distingue bem, mas exige investimento para construir significado. Exemplos: Yoodli, Mursion, Docebo.',
+    A:'Nome próprio de pessoa, que dá persona à IA. Exemplos: Nadia, AIMY, Luri.',
+    C:'Junção de duas palavras ou radicais. Exemplos: Hyperbound, Simulayer, Play2Learn.',
+    X:'Formada pelas iniciais de uma expressão. Exemplos: CAISY (Conversation AI Simulator) e LPH Roleplay.'},
+ s:{P:'Nomes que remetem a ensaiar, treinar ou simular situações. Exemplos: Rehearsal, SIMULA, Mursion.',
+    H:'Nomes que sugerem alguém que acompanha ou aconselha: coach, mentor, maestro ou uma figura com nome próprio. Exemplos: Nadia, Merlin, Maestro.',
+    R:'Nomes que remetem a resultado, desempenho ou maestria, comuns em vendas. Exemplos: Second Nature, Hyperbound, Exec.',
+    C:'Nomes ligados a fala, voz, retórica ou diálogo. Exemplos: VirtualSpeech, Retorio, Tenor.',
+    L:'Nomes de marcas amplas de aprendizagem, sem foco em prática. Exemplos: Docebo, Udemy Business, Konviva.',
+    T:'Nomes que destacam tecnologia ou inovação. Exemplos: Future-se.AI, Smarter.IA.',
+    V:'Nomes que remetem a ver de outro ponto de vista ou a evoluir. Exemplos: Bodyswaps, Grow, Spark.',
+    N:'Nomes cujo sentido não aponta para um campo específico. Exemplos: Yoodli, Biatrix Studio.'},
+ ai:{E:'O nome traz as letras IA ou AI. Exemplos: Pratique IA, Rocky.ai, Kendo AI.',
+     S:'O nome usa termos tecnológicos que sugerem IA sem dizê-la. Exemplos: Virti, Simulayer, PlayAvatar.',
+     N:'O nome não menciona IA; a tecnologia aparece na descrição do produto. Exemplos: Yoodli, Docebo, Second Nature.'},
+ p:{1:'O nome dá à IA uma identidade de pessoa. Exemplos: Nadia, AIMY, CAISY.',
+    0:'A IA é tratada como ferramenta ou plataforma, sem identidade de pessoa. Exemplos: Yoodli, Hyperbound.'}
+};
+const DIMDESC={g:'Grupo competitivo',o:'Origem',t:'Tipologia do nome',s:'Território de significado',ai:'Relação com IA',p:'Personificação'};
+const PAL=['--c1','--c2','--c3','--c4','--c5','--c6','--c7','--c8'];
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const st={lens:'gt',reps:new Set([1,2,3,4,5]),grps:new Set(['A','B','C','D']),wt:'one',q:'',sel:null};
+let focus=null,root=null,palMap=new Map();
+
+/* ---------- controles ---------- */
+function buildMenu(menu,items,set,all,onchange){
+  menu.innerHTML='<button type="button" class="all">Selecionar todos</button>'+items.map(i=>'<label><input type="checkbox" value="'+i.k+'" checked><span>'+esc(i.label)+'</span></label>').join('');
+  menu.querySelector('.all').onclick=()=>{all.forEach(k=>set.add(k));menu.querySelectorAll('input').forEach(c=>c.checked=true);onchange()};
+  menu.querySelectorAll('input').forEach(c=>c.onchange=()=>{const k=isNaN(+c.value)?c.value:+c.value;c.checked?set.add(k):set.delete(k);onchange()});
+}
+function buildControls(){
+  const ls=document.getElementById('lensSel');ls.innerHTML=LENSES.map(l=>'<option value="'+l.id+'">'+esc(l.label)+'</option>').join('');
+  ls.onchange=()=>{st.lens=ls.value;st.sel=null;redraw()};
+  buildMenu(document.getElementById('repsMenu'),[1,2,3,4,5].map(n=>({k:n,label:'R'+n+' · '+REPORTS[n].amostra})),st.reps,[1,2,3,4,5],()=>{drawControls();redraw()});
+  buildMenu(document.getElementById('grpsMenu'),Object.keys(LAB.g).map(k=>({k,label:LAB.g[k]})),st.grps,Object.keys(LAB.g),()=>{drawControls();redraw()});
+  document.addEventListener('click',e=>{const path=e.composedPath();document.querySelectorAll('details.dd[open]').forEach(d=>{if(!path.includes(d))d.open=false})});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('details.dd[open]').forEach(d=>d.open=false)});
+  drawControls();
+}
+function drawControls(){
+  const r=[...st.reps].sort();document.getElementById('repsTxt').textContent=r.length===5?'Todos':r.length?r.map(n=>'R'+n).join(', '):'Nenhum';
+  const g=[...st.grps].sort();document.getElementById('grpsTxt').textContent=g.length===4?'Todos':g.length?g.join(', '):'Nenhum';
+}
+document.getElementById('q').addEventListener('input',e=>{st.q=e.target.value.trim().toLowerCase();redraw()});
+
+/* ---------- dados ---------- */
+function filtered(){
+  return PLAYERS.filter(p=>st.grps.has(p.g)&&p.r.some(r=>st.reps.has(r))&&(!st.q||p.name.toLowerCase().includes(st.q)));
+}
+function buildTree(ps){
+  const L=LENSES.find(l=>l.id===st.lens).k;
+  const t={name:'Todos',children:[],key:null};
+  const m1=new Map();
+  ps.forEach(p=>{
+    const a=p[L[0]],b=p[L[1]];
+    if(!m1.has(a))m1.set(a,{name:LAB[L[0]][a],key:L[0],code:a,children:[],m:new Map()});
+    const n1=m1.get(a);
+    if(!n1.m.has(b)){const n2={name:LAB[L[1]][b],key:L[1],code:b,children:[]};n1.m.set(b,n2);n1.children.push(n2);}
+    n1.m.get(b).children.push({name:p.name,player:p,value:st.wt==='rep'?p.r.filter(r=>st.reps.has(r)).length:1});
+  });
+  m1.forEach(n=>{delete n.m;t.children.push(n)});
+  return t;
+}
+const lum=c=>d3.lab(c).l;
+
+/* ---------- gráfico ---------- */
+const W=760;
+function wrapName(s,max){if(s.length<=max)return [s];const w=s.split(' ');let best=null;for(let i=1;i<w.length;i++){const a=w.slice(0,i).join(' '),b=w.slice(i).join(' ');const m=Math.max(a.length,b.length);if(!best||m<best.m)best={l:[a,b],m};}return best?best.l:[s];}
+function fitLabel(d){const L=wrapName(d.data.name,16);const mx=Math.max(...L.map(x=>x.length));d.lines=L;d.fs=Math.max(6,Math.min(11,100/(mx*.56)));}
+function redraw(){
+  const svg=d3.select('#sun');svg.selectAll('*').remove();
+  const ps=filtered();
+  if(!ps.length){svg.append('text').attr('x',W/2).attr('y',W/2).attr('text-anchor','middle').attr('fill',css('--muted')).text('Nenhum player neste recorte');
+    document.getElementById('panel').innerHTML='<div class="empty">Ajuste os filtros de relatório, grupo ou busca.</div>';document.getElementById('legend').innerHTML='';document.getElementById('pcard').innerHTML='';document.getElementById('plMenu').innerHTML='';return;}
+  const data=buildTree(ps);
+  root=d3.partition().size([2*Math.PI,4])(d3.hierarchy(data).sum(d=>d.value||0).sort((a,b)=>b.value-a.value||a.data.name.localeCompare(b.data.name)));
+  const radius=W/6;
+  palMap=new Map();
+  root.children.forEach((c,i)=>palMap.set(c.data.name,css(PAL[i%PAL.length])));
+  const base=d=>palMap.get(d.ancestors().find(a=>a.depth===1).data.name);
+  const fillOf=d=>{const b=d3.color(base(d));return d.depth===1?b:d.depth===2?b.darker(.45):b.brighter(.35)};
+  root.each(d=>{d.current=d;fitLabel(d)});
+  const arc=d3.arc().startAngle(d=>d.x0).endAngle(d=>d.x1).padAngle(d=>Math.min((d.x1-d.x0)/2,.005)).padRadius(radius*1.5).innerRadius(d=>d.y0*radius).outerRadius(d=>Math.max(d.y0*radius,d.y1*radius-2));
+  const vis=d=>d.y1<=3&&d.y0>=1&&d.x1>d.x0;
+  const labVis=d=>d.y1<=3&&d.y0>=1&&(d.x1-d.x0)*((d.y0+d.y1)/2*radius)>d.lines.length*d.fs*1.1;
+  const lt=d=>{const x=(d.x0+d.x1)/2*180/Math.PI,y=(d.y0+d.y1)/2*radius;return `rotate(${x-90}) translate(${y},0) rotate(${x<180?0:180})`};
+  const g=svg.append('g').attr('transform',`translate(${W/2},${W/2})`);
+  const path=g.append('g').selectAll('path').data(root.descendants().slice(1)).join('path')
+    .attr('fill',fillOf).attr('fill-opacity',d=>vis(d.current)?(d.children?.9:.85):0)
+    .attr('pointer-events',d=>vis(d.current)?'auto':'none').attr('d',d=>arc(d.current))
+    .attr('stroke',d=>d.data.player&&st.sel===d.data.player.id?css('--fg'):'none').attr('stroke-width',2);
+  path.style('cursor','pointer').attr('tabindex',d=>vis(d.current)?0:-1)
+    .attr('role','button').attr('aria-label',d=>d.data.name+', '+d.value+(d.data.player?' citações':' players'))
+    .on('click',(e,d)=>clicked(d)).on('keydown',(e,d)=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();clicked(d)}});
+  path.append('title').text(d=>d.data.player?d.data.name+' · '+d.data.player.r.map(r=>'R'+r).join(' '):d.ancestors().reverse().slice(1).map(a=>a.data.name).join(' › ')+' · '+d.leaves().length+' players');
+  const label=g.append('g').attr('pointer-events','none').attr('text-anchor','middle').selectAll('text').data(root.descendants().slice(1)).join('text')
+    .attr('font-size',d=>d.fs).attr('font-weight',d=>d.children?600:400)
+    .attr('fill',d=>lum(fillOf(d))>55?'#170D17':'#F7F7F7')
+    .attr('fill-opacity',d=>+labVis(d.current)).attr('transform',d=>lt(d.current))
+    .each(function(d){const n=d.lines.length;d3.select(this).selectAll('tspan').data(d.lines).join('tspan').attr('x',0).attr('dy',(l,i)=>i===0?((.35-(n-1)*.55)+'em'):'1.1em').text(l=>l);});
+  const cg=g.append('g').style('cursor','pointer').on('click',()=>{if(focus&&focus.parent)clicked(focus.parent)});
+  cg.append('circle').attr('r',radius-2).attr('fill',css('--bg')).attr('stroke',css('--line'));
+  const c1=cg.append('text').attr('text-anchor','middle').attr('y',-8).attr('font-size',15).attr('font-weight',700).attr('fill',css('--fg'));
+  const c2=cg.append('text').attr('text-anchor','middle').attr('y',14).attr('font-size',12).attr('fill',css('--muted'));
+  const c3=cg.append('text').attr('text-anchor','middle').attr('y',32).attr('font-size',11).attr('fill',css('--muted'));
+  function center(p){
+    const nm=p===root?'Todos':p.data.name;
+    const L=wrapName(nm,15),mx=Math.max(...L.map(x=>x.length)),fs=Math.max(10,Math.min(16,170/(mx*.6))),n=L.length;
+    c1.attr('font-size',fs).attr('y',-14-(n-1)*fs*.575);
+    c1.selectAll('tspan').data(L).join('tspan').attr('x',0).attr('dy',(l,i)=>i===0?'0':'1.15em').text(l=>l);
+    const y2=10+(n-1)*fs*.575+fs*.5;
+    c2.attr('y',y2).text(p.leaves().length+' players');
+    c3.attr('y',y2+17).text(p===root?'clique para aprofundar':(p.parent?'clique para voltar':''));
+  }
+  function clicked(p){
+    if(!p.children){st.sel=p.data.player.id;path.attr('stroke',d=>d.data.player&&d.data.player.id===st.sel?css('--fg'):'none');panel(focus||root);return;}
+    focus=p;
+    root.each(d=>d.target={x0:Math.max(0,Math.min(1,(d.x0-p.x0)/(p.x1-p.x0)))*2*Math.PI,x1:Math.max(0,Math.min(1,(d.x1-p.x0)/(p.x1-p.x0)))*2*Math.PI,y0:Math.max(0,d.y0-p.depth),y1:Math.max(0,d.y1-p.depth),lines:d.lines,fs:d.fs});
+    const t=g.transition().duration(reduce?0:700);
+    path.transition(t).tween('data',d=>{const i=d3.interpolate(d.current,d.target);return u=>d.current=i(u)})
+      .attr('fill-opacity',d=>vis(d.target)?(d.children?.9:.85):0).attr('pointer-events',d=>vis(d.target)?'auto':'none')
+      .attr('tabindex',d=>vis(d.target)?0:-1).attrTween('d',d=>()=>arc(d.current));
+    label.transition(t).attr('fill-opacity',d=>+labVis(d.target)).attrTween('transform',d=>()=>lt(d.current));
+    center(p);panel(p);
+  }
+  focus=root;center(root);panel(root);
+  const lg=document.getElementById('legend');lg.innerHTML='';
+  root.children.forEach(c=>{const s=document.createElement('span');s.innerHTML='<i style="background:'+palMap.get(c.data.name)+'"></i>'+c.data.name+' ('+c.leaves().length+')';lg.appendChild(s)});
+}
+
+/* ---------- painel ---------- */
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function panel(p){
+  const el=document.getElementById('panel');
+  const leaves=p.leaves().map(l=>l.data.player);
+  const total=filtered().length;
+  const path=p.ancestors().reverse();
+  const crumbs=path.map((a,i)=>i===path.length-1?'<span>'+esc(a===root?'Todos':a.data.name)+'</span>':'<button data-i="'+i+'">'+esc(a===root?'Todos':a.data.name)+'</button>').join(' › ');
+  const lensName=LENSES.find(l=>l.id===st.lens).label;
+  let kids=p.children&&p.children[0]&&p.children[0].children?p.children:null;
+  let h='<div><div class="crumbs">'+crumbs+'</div><h2><b>'+leaves.length+'</b> players'+(p===root?'':' em '+esc(p.data.name))+'</h2>'
+   +'<p class="note">'+Math.round(leaves.length/total*100)+'% da base filtrada ('+total+' players). Recorte: '+esc(lensName)+'.</p>'+defHtml(p)+'</div>';
+  if(p.children&&!p.children[0].data.player){
+    const kk=p.children;
+    h+='<div><p class="sub">'+(p===root?KEYNAME[LENSES.find(l=>l.id===st.lens).k[0]]:KEYNAME[kk[0].data.key])+'</p><div class="bars">'+kk.map((c,i)=>{const n=c.leaves().length;return '<button class="bar" data-k="'+i+'"><span class="nm">'+esc(c.data.name)+'</span><span class="tr"><span class="fl" style="width:'+Math.round(n/leaves.length*100)+'%;background:'+palMap.get(c.ancestors().find(a=>a.depth===1).data.name)+'"></span></span><span class="pc">'+n+'</span></button>'}).join('')+'</div></div>';
+  }
+  const initial=n=>{const c=n.normalize('NFD').replace(/[\u0300-\u036f]/g,'')[0].toUpperCase();return /[A-Z]/.test(c)?c:'#'};
+  const grp=new Map();leaves.sort((x,y)=>x.name.localeCompare(y.name)).forEach(x=>{const k=initial(x.name);if(!grp.has(k))grp.set(k,[]);grp.get(k).push(x)});
+  const keys=[...grp.keys()].sort((a,b)=>a==='#'?1:b==='#'?-1:a<b?-1:1);
+  if(!st.letter||!grp.has(st.letter))st.letter=(st.sel!=null&&grp.has(initial(PLAYERS[st.sel].name)))?initial(PLAYERS[st.sel].name):keys[0];
+  buildPlayerMenu(grp,keys,leaves,p);
+  el.innerHTML=h;renderCard();
+  el.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{const c=p.children[+b.dataset.k];d3.selectAll('#sun path').filter(d=>d===c).dispatch('click')});
+  el.querySelectorAll('.crumbs button').forEach(b=>b.onclick=()=>{const a=path[+b.dataset.i];d3.selectAll('#sun path').filter(d=>d===a).dispatch('click');if(a===root){focusRoot()}});
+}
+function buildPlayerMenu(grp,keys,leaves,p){
+  const m=document.getElementById('plMenu');
+  const alpha='ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').concat(grp.has('#')?['#']:[]);
+  m.innerHTML='<p class="sub">Players neste recorte · '+leaves.length+'</p><div class="letters" role="group" aria-label="Filtrar por letra inicial">'+alpha.map(k=>'<button type="button" data-l="'+k+'" aria-pressed="'+(k===st.letter)+'"'+(grp.has(k)?' title="'+grp.get(k).length+' players"':' disabled')+'>'+k+'</button>').join('')+'</div><div class="plist">'+grp.get(st.letter).map(x=>'<button type="button" data-p="'+x.id+'"'+(st.sel===x.id?' aria-current="true"':'')+'>'+esc(x.name)+'</button>').join('')+'</div>';
+  m.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>{st.letter=b.dataset.l;buildPlayerMenu(grp,keys,leaves,p)});
+  m.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{st.sel=+b.dataset.p;d3.selectAll('#sun path').attr('stroke',d=>d.data.player&&d.data.player.id===st.sel?css('--fg'):'none');document.getElementById('plDd').open=false;panel(p)});
+  document.getElementById('plTxt').textContent=st.sel!=null?PLAYERS[st.sel].name:'Selecionar';
+}
+function defHtml(p){
+  if(p===root)return '<p class="def"><b>'+esc(lensName2())+'.</b> '+esc(LENSDEF[st.lens])+' Clique em uma categoria do gráfico para aprofundar.</p>';
+  const d=DEF[p.data.key]&&DEF[p.data.key][p.data.code];
+  return d?'<p class="def"><b>'+esc(p.data.name)+'.</b> '+esc(d)+'</p>':'';
+}
+function lensName2(){return LENSES.find(l=>l.id===st.lens).label}
+function renderCard(){
+  const el=document.getElementById('pcard');
+  if(st.sel==null){el.innerHTML='<p class="note">Selecione um player no filtro Player ou no gráfico para ver a ficha.</p>';return;}
+  const x=PLAYERS[st.sel];
+  el.innerHTML='<div class="overline">Player selecionado</div><h3>'+esc(x.name)+'</h3><div class="kv3">'
+   +'<div><span>Grupo</span><b>'+LAB.g[x.g]+'</b></div><div><span>Origem</span><b>'+LAB.o[x.o]+'</b></div><div><span>Tipologia</span><b>'+LAB.t[x.t]+'</b></div>'
+   +'<div><span>Território</span><b>'+LAB.s[x.s]+'</b></div><div><span>Relação com IA</span><b>'+LAB.ai[x.ai]+'</b></div><div><span>Persona</span><b>'+LAB.p[x.p]+'</b></div>'
+   +'<div><span>Citado em</span><b><span class="rtags" style="display:flex">'+x.r.map(r=>'<span class="rt" title="'+esc(REPORTS[r].arq)+'" style="text-transform:none;letter-spacing:0;color:var(--fg)">R'+r+'</span>').join('')+'</span></b></div></div>'
+   +'<p class="note">'+esc(x.note||(x.r.length>1?'Sem divergência relevante de classificação entre os relatórios.':'Citado em um único relatório.'))+'</p>';
+}
+function focusRoot(){ /* volta ao centro por redesenho simples */ redraw(); }
+
+/* ---------- tabela e insights ---------- */
+document.getElementById('rleg').innerHTML=[1,2,3,4,5].map(n=>'<span><b>R'+n+'</b> '+esc(REPORTS[n].arq.replace(/\.md$/,''))+'</span>').join('');
+document.getElementById('ilist').innerHTML=INSIGHTS.map((x,i)=>'<article class="ins"><div><div class="overline">'+esc(x.tema)+' · '+(i+1)+' de '+INSIGHTS.length+'</div><h3>'+esc(x.t)+'</h3><p class="dir"><b>Diretriz.</b> '+esc(x.d)+'</p>'+(x.ex?'<p class="dir sm"><b>Exemplo.</b> '+esc(x.ex)+'</p>':'')+(x.nb?'<p class="dir sm"><b>Ressalva.</b> '+esc(x.nb)+'</p>':'')+'<div class="conv">Convergência: <span class="rtags">'+x.conv.map(r=>'<span class="rt">R'+r+'</span>').join('')+'</span></div></div><div class="ev">'+x.ev.map(e=>'<blockquote><p class="ctx">'+esc(e[3])+'</p><p>“'+esc(e[2])+'”</p><cite><span class="rt">R'+e[0]+'</span>'+esc(e[1])+'</cite></blockquote>').join('')+'</div></article>').join('');
+let glDim='t';
+function renderGl(){
+  document.getElementById('gl-l').innerHTML=LENSES.map(l=>'<div class="grow l"><b>'+esc(l.label)+'</b><span>'+esc(LENSDEF[l.id])+'</span><button type="button" data-lens="'+l.id+'">Ver no gráfico</button></div>').join('');
+  document.querySelectorAll('#gl-l [data-lens]').forEach(b=>b.onclick=()=>{st.lens=b.dataset.lens;st.sel=null;document.getElementById('lensSel').value=st.lens;redraw();window.scrollTo({top:0,behavior:reduce?'auto':'smooth'})});
+  const tabs=document.getElementById('gl-tabs');
+  tabs.innerHTML=['g','o','t','s','ai','p'].map(k=>'<button type="button" role="tab" data-k="'+k+'" aria-selected="'+(k===glDim)+'">'+esc(DIMDESC[k])+'</button>').join('');
+  tabs.querySelectorAll('button').forEach(b=>b.onclick=()=>{glDim=b.dataset.k;renderGl()});
+  document.getElementById('gl-c').innerHTML='<div class="grow h"><span>Categoria</span><span>O que é</span><span>Exemplos</span><span class="n">Players</span></div>'+Object.keys(LAB[glDim]).map(c=>{const parts=String(DEF[glDim][c]).split(' Exemplos: ');const n=PLAYERS.filter(x=>String(x[glDim])===String(c)).length;return '<div class="grow"><b>'+esc(LAB[glDim][c])+'</b><span>'+esc(parts[0])+'</span><span class="ex">'+esc(parts[1]||'').replace(/\.$/,'')+'</span><span class="n">'+n+' players</span></div>'}).join('');
+}
+renderGl();
+
+/* ---------- abas ---------- */
+function tab(id){
+  const m=id==='mapa';
+  document.getElementById('pg-mapa').hidden=!m;document.getElementById('pg-insights').hidden=m;
+  document.getElementById('tab-mapa').setAttribute('aria-selected',String(m));document.getElementById('tab-insights').setAttribute('aria-selected',String(!m));
+}
+document.getElementById('tab-mapa').onclick=()=>{tab('mapa');try{history.replaceState(null,'','#mapa')}catch(e){}};
+document.getElementById('tab-insights').onclick=()=>{tab('insights');try{history.replaceState(null,'','#insights')}catch(e){}};
+if(location.hash==='#insights')tab('insights');
+buildControls();redraw();
+</script>
